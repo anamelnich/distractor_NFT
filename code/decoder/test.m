@@ -1,0 +1,1 @@
+ test = sload('test32_v161.gdf');

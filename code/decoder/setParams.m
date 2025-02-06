@@ -1,0 +1,97 @@
+% Configures various predefined parameters and saves it into a structure 
+% variable 'cfg'. 
+function params = setParams(header)
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    %% General Information %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    params.fsamp = header.SampleRate;
+    load chanlocs64.mat
+    [keepIdx, eegIndex] = ismember(header.Label, upper({chanlocs64.labels}));
+    params.chanlocs = chanlocs64(eegIndex(keepIdx));    
+
+    params.eegChannels = 1:64; 
+    params.eogChannels = 65:68;
+    params.triggerChannel = 69;
+
+    params.channelPlot = find(strcmp({params.chanlocs.labels}, 'PO8'));  % normally this one
+    params.plotOption = {'LineWidth', 2};
+    params.plotColor = {[228,26,28], [55,126,184], [77,175,74]};
+    params.plotColor = cellfun(@(x) rdivide(x, 255), params.plotColor, 'UniformOutput', false);
+    
+    %%%%%%%%%%%%%%
+    %% Epoching %%
+    %%%%%%%%%%%%%%
+    params.epochSamples = -0.5*params.fsamp+1:1.0*params.fsamp;
+    params.epochTime = params.epochSamples./params.fsamp;
+    params.epochOnset = find(params.epochTime == 0);
+    
+    %%%%%%%%%%%%%%%%%%%%%
+    %% Epoch Rejection %%
+    %%%%%%%%%%%%%%%%%%%%%
+    params.epochRejection.isCompute = true;
+    %params.epochRejection.time = round(0.1*params.fsamp)+1:round(0.5*params.fsamp);
+    params.epochRejection.time = round(0.15*params.fsamp)+1:round(0.3*params.fsamp);
+    params.epochRejection.time = params.epochRejection.time + params.epochOnset;
+    
+    %%%%%%%%%%%%%%%%%%%%%
+    %% Channel Removal %%
+    %%%%%%%%%%%%%%%%%%%%%
+    params.channelRemoval.isCompute = false;
+    
+    %%%%%%%%%%%%%%%%%%%%%
+    %% Spectral Filter %%
+    %%%%%%%%%%%%%%%%%%%%%
+    params.spectralFilter.freqs = [1 30];  % cut-off frequencies
+    params.spectralFilter.order = 2;  % 2*params.fsamp for FIR filter
+
+    %%%%%%%%%%%%%%%%%%%%
+    %% Spatial Filter %%
+    %%%%%%%%%%%%%%%%%%%%
+    params.spatialFilter.type = 'CCA';  % Option : CAR, Laplace, xDAWN, CCA, CSD, None
+    params.spatialFilter.time = round(0.1*params.fsamp)+1:round(0.5*params.fsamp);
+    params.spatialFilter.time = params.spatialFilter.time + params.epochOnset;
+    params.spatialFilter.nComp = 4;
+    params.spatialFilter.classes = [1, 2];
+
+    %%%%%%%%%%%%%%%%%%%%%%
+    %% Resampling Ratio %%
+    %%%%%%%%%%%%%%%%%%%%%%
+    params.resample.is_compute = true;
+    params.resample.ratio = round(params.fsamp / 64);  % re-sampling frequency is 64 Hz
+    params.resample.time = round(0.15*params.fsamp)+1:round(0.3*params.fsamp);
+    params.resample.time = params.resample.time + params.epochOnset;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Power Spectral Density %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    params.psd.is_compute = false;
+    params.psd.type = 'pwelch';  % {'pwelch', ''pmtm', 'stockwell'}
+    params.psd.time = round(0.2*params.fsamp)+1:round(0.6*params.fsamp);
+    params.psd.time = params.psd.time + params.epochOnset;
+    params.psd.window = hanning(length(params.psd.time));
+    params.psd.nfft  = 4*params.fsamp;
+    params.psd.overlap = [];
+    params.psd.freq_range = [4:2:params.spectralFilter.freqs(end)];
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Riemannien Geometry %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    params.riemann.is_compute = false;
+    params.riemann.time = round(0.2*params.fsamp)+1:round(0.6*params.fsamp);
+    params.riemann.time = params.riemann.time + params.epochOnset;
+    params.riemann.type = 'riemann';
+    params.riemann.base = [2];
+    params.riemann.is_plot = true;
+
+    %%%%%%%%%%%%%%%%
+    %% Classifier %%
+    %%%%%%%%%%%%%%%%
+    params.classify.is_normalize = true;
+    params.classify.reduction.type = 'none'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
+    params.classify.type = 'linear'; % {'SVM', 'LinearSVM', 'LDA', 'diagLDA', 'diagQuadratic', 'SLR_VAR', 'L1_SLR'}
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Asynchronous Classification %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    params.asynchronous.waitSample = round(0.25*params.fsamp);    
+end
