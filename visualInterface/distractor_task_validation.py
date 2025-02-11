@@ -2,15 +2,13 @@
 import pygame
 import math
 import random
-import os
+# import os
 from datetime import datetime
 import sys
 from pygame.locals import *
 ###### These are the imports to make the hardware triggers work ######
-from python_client import Trigger
-from cnbiloop import BCI_tid ##############new
-import threading
-import subprocess
+# from python_client import Trigger
+
 
 ########################functions########################
 def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
@@ -21,46 +19,12 @@ def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
 def add_trigger(code):
     timestamp = pygame.time.get_ticks()
     trigger.append((code, timestamp, trial_index))
-    HWTrigger.signal(code)
-# def send_tid(value):
-#     bci.id_msg_bus.SetEvent(value)
-#     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
-# def receive_tid(bci):
-#     #make variables global so that they are accessible to both main loop and trigger listener thread
-#     global correct_detected, error_detected, feedback_mode
-#     try:
-#         data = bci.iDsock_bus.recv(512).decode("utf-8") #socket retrieves data and converts it to string
-#         if data:
-#             bci.idStreamer_bus.Append(data) # adds recieved data to streamer buffer
-#             if bci.idStreamer_bus.Has("<tobiid", "/>"): #<tobiid signals beginning of new message and /> is end delimiter
-#                 msg = bci.idStreamer_bus.Extract("<tobiid", "/>") #message will contain 2 if posterio above threshold, 1 if below
-#                 bci.id_serializer_bus.Deserialize(msg) #extracts the trigger value from serialized message
-#                 bci.idStreamer_bus.Clear() #reset stream buffer
-#                 tmpmsg = int(round(float(bci.id_msg_bus.GetEvent())))
-                
-#                 print("Received Message: ", float(bci.id_msg_bus.GetEvent()))
-                
-#                 if tmpmsg == 1:
-#                     print('Pd Detected') #make sure this is right
-#                     correct_detected = True
-#                 elif tmpmsg == 2:
-#                     print('No Pd Detected')
-#                     error_detected = True
-#                     feedback_mode = True
-                    
-#     except Exception as e:
-#         print("Error receiving TID:", e)
-#         pass
-# # Function to continuously receive triggers in a separate thread
-# def trigger_listener(bci, running_flag):
-#     while running_flag[0]: #controls execution of thread, logical list
-#         receive_tid(bci)
-#         pygame.time.wait(20)  # in msec
+    # HWTrigger.signal(code)
 def circle(x, y, radius):
     pygame.draw.circle(screen, (0, 128, 0), (int(x), int(y)), int(radius))
 
-def square(x, y, width, height, color):
-    pygame.draw.rect(screen, color, (int(x - width / 2), int(y - height / 2), int(width), int(height)))
+# def square(x, y, width, height, color):
+#     pygame.draw.rect(screen, color, (int(x - width / 2), int(y - height / 2), int(width), int(height)))
 
 def diamond(x, y, width, height, color):
     pygame.draw.polygon(screen, color, [
@@ -69,10 +33,10 @@ def diamond(x, y, width, height, color):
         (int(x), int(y + height / 2)),  # Bottom
         (int(x - width / 2), int(y))    # Left
     ])
-def hexagon(x, y, width, height, color):
-    radius = width / 2
-    points = [(x + radius * math.cos(math.radians(60 * i)), y + radius * math.sin(math.radians(60 * i))) for i in range(6)]
-    pygame.draw.polygon(screen, color, [(int(px), int(py)) for px, py in points])
+# def hexagon(x, y, width, height, color):
+#     radius = width / 2
+#     points = [(x + radius * math.cos(math.radians(60 * i)), y + radius * math.sin(math.radians(60 * i))) for i in range(6)]
+#     pygame.draw.polygon(screen, color, [(int(px), int(py)) for px, py in points])
 
 def draw_dot(x, y, shape_width, side):
     dot_radius = 5
@@ -106,18 +70,11 @@ pygame.font.init()
 ########################innit vars########################
 timestamp_date = datetime.now().strftime("%Y%m%d")
 timestamp = datetime.now().strftime("%Y%m%d%H%M")
-# output_folder = f"saved_files/distractor/e{subject_number}_{timestamp_date}/e{subject_number}_{timestamp}{subject_run}_training"
-# os.makedirs(output_folder, exist_ok=True)
-# gdf_file = os.path.join(output_folder, f"e{subject_number}_{timestamp}{subject_run}_training.gdf")
-# log_file = os.path.join(output_folder, f"e{subject_number}_{timestamp}{subject_run}_training.log")
 text_to_save = ""
 text_to_analyze = ""
-# # Open GDF and log files
-# args = ["cl_rpc", "openxdf", gdf_file, log_file, "\"\""]
-# subprocess.run(args) 
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('ARDUINO')
-HWTrigger.init(50)
+# HWTrigger = Trigger('USB2LPT')
+# HWTrigger.init(50)
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
 trigger=[]
@@ -145,8 +102,6 @@ d_from_center = degrees_to_pixels(eccentricity_deg, viewing_distance_cm, pixels_
 shape_definitions = [
     {"type": "diamond", "size_deg": (1.3, 1.3)},   # width x height
     {"type": "circle", "size_deg": 1.3},            # diameter
-    {"type": "hexagon", "size_deg": (1.3, 1.3)},    # width x height
-    {"type": "square", "size_deg": (1.2, 1.2)},     # width x height
 ]
 # Convert shape sizes from degrees to pixels
 for shape in shape_definitions:
@@ -161,7 +116,7 @@ for shape in shape_definitions:
         shape["height_px"] = degrees_to_pixels(height_deg, viewing_distance_cm, pixels_per_cm)
 
 # Calculate shape coordinates
-set_size = len(shape_definitions)
+set_size = 4
 shape_coord = []
 start_angle_offset = math.pi / 2  # 90 degrees to start at the top
 
@@ -224,7 +179,7 @@ for i in range(n_trials):
     available_positions = [pos for pos in range(1, set_size+1) if pos != t_pos[i]]
     random.shuffle(available_positions)
 
-    shape_names = ['Diamond', 'Hexagon', 'Square','Diamond', 'Hexagon', 'Square','Diamond', 'Hexagon','Square']
+    shape_names = ['Square', 'Square', 'Square','Square', 'Square', 'Square','Square', 'Square','Square']
     shape_positions_trial = {}
     shape_positions_trial[t_pos[i]] = ('Circle', random.choice([0, 1]))  # Circle with random dot side
 
@@ -298,9 +253,9 @@ while run:
         #     t_side+=1
         #     d_pos[trial_index]=1
         if trial_type[trial_index]==1:
-            start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
+            start_trigger = int('2' + str(t_side)+str(d_pos[trial_index]))
         else:
-            start_trigger = int( '1' + str(t_side)+str(d_pos[trial_index]))
+            start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
         add_trigger(start_trigger)
         while not trial_end:
 
@@ -324,20 +279,11 @@ while run:
                         shape_width = shape_definitions[1]["diameter_px"]
                         dot_correct = dot_side
 
-                    elif shape_type == 'Square':
-                        shape_width = shape_definitions[3]["width_px"]    # Square's width in pixels
-                        shape_height = shape_definitions[3]["height_px"]  # Square's height in pixels
-                        square(x, y, shape_width, shape_height, color)
-
-                    elif shape_type == 'Diamond':
+                    else:
                         shape_width = shape_definitions[0]["width_px"]    # Diamond's width in pixels
                         shape_height = shape_definitions[0]["height_px"]  # Diamond's height in pixels
                         diamond(x, y, shape_width, shape_height, color)
 
-                    elif shape_type == 'Hexagon':
-                        shape_width = shape_definitions[2]["width_px"]    # Hexagon's width in pixels
-                        shape_height = shape_definitions[2]["height_px"]  # Hexagon's height in pixels
-                        hexagon(x, y, shape_width, shape_height, color)
                     draw_dot(x, y, shape_width, dot_side)
 
 

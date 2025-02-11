@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e8'
+subjectID='e9'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -310,8 +310,8 @@ epochs.newlabels(epochs.labels == 2) = 1;
 disp('== Synchronous Classification == ');
 % [x, y, t, auc, opt] = perfcurve(~epochs.labels,1-epochs.posteriors, 1, 'Prior', 'uniform');
 [x, y, t, auc, opt] = perfcurve(epochs.newlabels,epochs.posteriors, 1, 'Prior', 'uniform');
-threshold = 0.5;
-%threshold = t(x == opt(1) & y == opt(2));
+%threshold = 0.5;
+threshold = t(x == opt(1) & y == opt(2));
 disp(['AUC score : ' num2str(auc, '%.2f') ' Threshold: ' num2str(threshold, '%.2f')]);
 disp('Confusion Matrix: ');
 cm = confusionmat(logical(epochs.newlabels), (epochs.posteriors >= threshold));

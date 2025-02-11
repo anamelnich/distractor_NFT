@@ -1,0 +1,1 @@
+test = sload("test.gdf")
