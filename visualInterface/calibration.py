@@ -44,7 +44,7 @@ class visualInterface(QWidget):
         "serial port (should be commented out during the development)"
         self.isParallel = True
         if (self.isParallel is True):
-            self.parallel = Trigger('USB2LPT')
+            self.parallel = Trigger('ARDUINO')
             self.parallel.init(50)
             self.TriggerSend(1)
 
