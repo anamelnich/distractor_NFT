@@ -55,6 +55,8 @@ try
                     fprintf('Label value at first_index (%d): %d\n', first_index, label_value);
     
                     ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
+                    %stream.eeg is 768 x 68, first_index = 154, label_value
+                    %110
                     % eeg will rougly be 728x64
                     disp(['Time Frame: ' num2str(time_frame, '%.2f') ' Posteriors: ' num2str(ex_posterior, ' %.2f')]);
                     stream.trigger(first_index) = 0;

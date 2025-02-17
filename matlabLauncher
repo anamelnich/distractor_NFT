@@ -1,2 +1,3 @@
 cd ./code/cnbiLoop
-sudo -H matlab v=syslib -nodesktop -nosplash -r ndf_main
+matlab -nodesktop -nosplash -r ndf_main
+
