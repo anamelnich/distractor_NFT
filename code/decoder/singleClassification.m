@@ -1,6 +1,6 @@
 function posterior = singleClassification(decoder, eeg, labels, type, leftElectrodes, rightElectrodes) %singleClassification(decoder, epochs.data(:, :, test_index))
 
- %epochs.posteriors(test_index) = singleClassification(decoder, epochs.data(:, :, test_index), epochs.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+%epochs.posteriors(test_index) = singleClassification(decoder, epochs.data(:, :, test_index), epochs.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 %ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
                    
 %if ~mislocked
@@ -18,11 +18,14 @@ function posterior = singleClassification(decoder, eeg, labels, type, leftElectr
 %     sf_eeg(:,:,i_trial) = eeg(:,:,i_trial) * decoder.spatialFilter_CAR;
 % end
 % eeg = sf_eeg;
+if type == 1 || type == 2
+    eeg(:,decoder.chantoremove)=[];
+end
+
 %% Select electrodes based on epoch labels
 
-% Initialize the array for selected electrodes
 n_samples = size(eeg, 1);
-n_electrodes = 6; % Number of electrodes per trial
+n_electrodes = length(leftElectrodes); 
 if type == 0
     n_trials = size(eeg, 3);
     selectedEpochs = nan(n_samples, n_electrodes, n_trials);
@@ -69,11 +72,9 @@ eeg = selectedEpochs;
 %% Baseline correction %%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if type == 0
-    baseline_start = decoder.epochOnset - round(0.2*decoder.fsamp);
-    baseline_period = [baseline_start, decoder.epochOnset];
-    baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
+    baseline_start = decoder.epochOnset - round(0.2*decoder.fsamp); %256 - 102
+    baseline = mean(eeg(baseline_start:decoder.epochOnset, :, :), 1); % [1 x channels x trials]
     eeg = eeg - baseline; 
-%     sf_eeg = eeg;
 elseif type == 1
     first_index = round(0.2*decoder.fsamp);
     baseline_period = [1, first_index];
@@ -89,20 +90,13 @@ elseif type == 2
 end
 sf_eeg = eeg;
 
-%% Spatial Filter CCA
-%n_trials = size(eeg, 3);
-%sf_eeg = nan(size(eeg,1), size(decoder.spatialFilter,2), n_trials);
-%for i_trial = 1:n_trials
- %   sf_eeg(:,:,i_trial) = eeg(:,:,i_trial) * decoder.spatialFilter;
-%end
-% sf_eeg = eeg;
 %% Temporal Information
 if (decoder.resample.is_compute)
     if type == 0 || type == 2
-        resamp = sf_eeg(decoder.resample.time(1:decoder.resample.ratio:end), :, :); %this doesn't seem right for online cause resample.time(1) = 308
+        resamp = sf_eeg(decoder.resample.time(1:decoder.resample.ratio:end), :, :); %334 to 512 or ~0.65-0.5 = 0.15 to 1-0.5=0.5
         resamp = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
     elseif type == 1
-        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.3*decoder.fsamp));
+        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.5*decoder.fsamp));
         resamp = sf_eeg(time(1:decoder.resample.ratio:end), :, :); %this doesn't seem right for online cause resample.time(1) = 308
         resamp = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
     end

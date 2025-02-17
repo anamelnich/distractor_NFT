@@ -1,49 +1,43 @@
 function decoder = computeDecoder(trainEpochs, trainLabels, params)
 %%
 
-% figure;
-% plot(mean(trainEpochs(:, leftElectrodeIndices, trainLabels == 1), 3),'Color','r'); hold on;
-% plot(mean(trainEpochs(:, rightElectrodeIndices, trainLabels == 1), 3),'Color','g');
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Artifact Rejection %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+if (params.epochRejection.isCompute) 
+    badEpochs = artRej(trainEpochs, params);
+    
+    badEpochIndices = find(badEpochs);
+    nTrials = size(trainEpochs,3);
+    trainEpochs(:, :, badEpochIndices) = [];
+    trainLabels(badEpochIndices) = [];
+    
+    
+    disp([num2str(sum(badEpochs)) ' / ' num2str(nTrials) ' trials are removed: ' num2str(100*sum(badEpochs)/nTrials) ' %']);
 
-% %% Spatial Filter
-%remove M1 M2 EOG
-%index=[1,2,3,13,19,32];
-%trainEpochs(:,index,:)=[];
+end
+%%%%%%%%%%%%%%%%%%%%
+%% Spatial Filter %%
+%%%%%%%%%%%%%%%%%%%%
+if strcmp(params.spatialFilter.type, 'CAR');
+    filterMatrix = get_spatial_filter('CAR', trainEpochs,trainLabels,params);
+    trainEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
+end
 
-% filterMatrix_CAR = get_spatial_filter('CAR', trainEpochs, trainLabels, params);
-% trainEpochs = apply_spatialFilter(trainEpochs, filterMatrix_CAR);
-%%
-% figure;
-% plot(mean(trainEpochs(:, leftElectrodeIndices, trainLabels == 1), 3),'Color','r'); hold on;
-% plot(mean(trainEpochs(:, rightElectrodeIndices, trainLabels == 1), 3),'Color','g');
-%% Select electrodes based on epoch labels
+%%%%%%%%%%%%%%%%%%%
+%% ROI selection %%
+%%%%%%%%%%%%%%%%%%%
 
-% Initialize the array for selected electrodes
+LeftElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3','PO5','PO7'};
+RightElectrodes = {'P2', 'P4', 'P6', 'P8', 'PO4', 'PO6','PO8'};
+leftElectrodeIndices = find(ismember(params.chanLabels,LeftElectrodes));
+rightElectrodeIndices = find(ismember(params.chanLabels,RightElectrodes));
+
 n_samples = size(trainEpochs, 1);
 n_trials = size(trainEpochs, 3);
-n_electrodes = 6; % Number of electrodes per trial
+n_electrodes = length(LeftElectrodes); 
 selectedEpochs = nan(n_samples, n_electrodes, n_trials);
 
-% Define the electrode names for left and right
-LeftElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3', 'PO5','PO7'};
-RightElectrodes = {'P2', 'P4', 'P6', 'P8', 'PO4', 'PO6','PO8'};
-% Map electrode names to indices
-% leftElectrodeIndices = find(ismember(training.header.Label,LeftElectrodes))
-% rightElectrodeIndices = find(ismember(training.header.Label,RightElectrodes))
-
-leftElectrodeIndices = [24,25,50,51,54,62]; 
-rightElectrodeIndices = [27,28,52,53,56,63]; 
-
-% leftElectrodeIndices = [22,23,47,48,51,52,59];
-% rightElectrodeIndices = [25,26,49,50,53,54,60];
-% leftElectrodeIndices = [22,23,47,48,51,52,59,25,26,49,50,53,54,60];
-% rightElectrodeIndices = [25,26,49,50,53,54,60,22,23,47,48,51,52,59];
-%leftElectrodeIndices = [19,20,44,45,48,49,56,22,23,46,47,50,51,57];
-%rightElectrodeIndices = [19,20,44,45,48,49,56,22,23,46,47,50,51,57];
-% leftElectrodeIndices = [19,20,44,45,48,49,56];
-% rightElectrodeIndices = [22,23,46,47,50,51,57];
-
-%%
 for i_trial = 1:n_trials
     label = trainLabels(i_trial);
 
@@ -61,45 +55,10 @@ for i_trial = 1:n_trials
     selectedEpochs(:, :, i_trial) = trainEpochs(:, electrodeIndices, i_trial);
 
 end
-trainEpochs = selectedEpochs;
+classEpochs = selectedEpochs;
 %relabel epochs to be 1 (Distractor) and 0 (No Distractor)
 trainLabels(trainLabels == 2) = 1;
 
-% %% Spatial Filter
-% filterMatrix = get_spatial_filter(params.spatialFilter.type, trainEpochs, trainLabels, params);
-% 
-% filterMatrix = filterMatrix(:, 1:params.spatialFilter.nComp);
-% classEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
-classEpochs = trainEpochs;
-
-
-%% Compute Channel-wise Joint Probability
-if (params.epochRejection.isCompute) 
-    epochRej = classEpochs(params.epochRejection.time, :, :);
-    [jp, ~, params.epochRejection.distribution, params.epochRejection.data2idx] = jointprob(permute(epochRej, [2 1 3]));
-    [logicalIdx, lowBound, highBound] = isoutlier(jp, 'median', 2, 'thresholdFactor', 2.75);
-    
-    rmIdx = any(logicalIdx, 1);
-    nTrials = size(trainEpochs,3);
-    rejectedLabels = trainLabels(rmIdx);
-    numClass0 = sum(rejectedLabels == 0);
-    numClass1 = sum(rejectedLabels == 1);
-    trainEpochs(:, :, rmIdx) = [];
-    trainLabels(rmIdx) = [];
-    
-    params.epochRejection.low = lowBound;
-    params.epochRejection.high = highBound;
-    
-    disp([num2str(sum(rmIdx)) ' / ' num2str(nTrials) ' trials are removed: ' num2str(100*sum(rmIdx)/nTrials) ' %']);
-    disp(['Rejected Class 0 ' num2str(numClass0) ' Rejected Class 1 ' num2str(numClass1)]);
-    
-    
-%     filterMatrix = get_spatial_filter(params.spatialFilter.type, trainEpochs, trainLabels, params);
-%     
-%     filterMatrix = filterMatrix(:, 1:params.spatialFilter.nComp);
-%     classEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
-    classEpochs = trainEpochs;
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Baseline correction %%%%%%%%%%%%%
@@ -108,19 +67,7 @@ baseline_period = [-0.2, 0];
 baseline_indices = find(params.epochTime >= baseline_period(1) & params.epochTime <= baseline_period(2));
 baseline = mean(classEpochs(baseline_indices, :, :), 1); % [1 x channels x trials]
 classEpochs = classEpochs - baseline;
-%%
-% figure;
-% plot(mean(classEpochs(:, :, trainLabels == 1), [2,3]),'Color','r'); hold on;
-% plot(mean(classEpochs(:, :, trainLabels == 0), [2,3]),'Color','g'); hold on;
-% plot(mean(classEpochs(:, :, trainLabels == 2), [2,3]),'Color','b'); 
-% ylim([-10 10]);
-% xline(256);
-% xline(564);
 
-% CCA
-%filterMatrix = get_spatial_filter(params.spatialFilter.type, classEpochs, trainLabels, params); %matrix of channels x canonical components ranked in descending order
-%filterMatrix = filterMatrix(:, 1:params.spatialFilter.nComp);
-%classEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
 
 %% Temporal Information
 if (params.resample.is_compute)
@@ -221,8 +168,9 @@ decoder.fsamp = params.fsamp;
 decoder.epochOnset = params.epochOnset;
 decoder.numFeatures = size(classifierEpochs, 1);
 decoder.epochRejection = params.epochRejection;
-%decoder.spatialFilter = filterMatrix;
-% decoder.spatialFilter_CAR = filterMatrix_CAR;
+if strcmp(params.spatialFilter.type, 'CAR');
+    decoder.spatialFilter = filterMatrix;
+end
 decoder.resample = params.resample;
 decoder.psd = params.psd;
 decoder.riemann = params.riemann;
