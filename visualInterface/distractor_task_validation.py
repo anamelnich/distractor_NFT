@@ -7,7 +7,7 @@ from datetime import datetime
 import sys
 from pygame.locals import *
 ###### These are the imports to make the hardware triggers work ######
-# from python_client import Trigger
+from python_client import Trigger
 
 
 ########################functions########################
@@ -19,7 +19,7 @@ def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
 def add_trigger(code):
     timestamp = pygame.time.get_ticks()
     trigger.append((code, timestamp, trial_index))
-    # HWTrigger.signal(code)
+    HWTrigger.signal(code)
 def circle(x, y, radius):
     pygame.draw.circle(screen, (0, 128, 0), (int(x), int(y)), int(radius))
 
@@ -73,8 +73,8 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M")
 text_to_save = ""
 text_to_analyze = ""
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-# HWTrigger = Trigger('USB2LPT')
-# HWTrigger.init(50)
+HWTrigger = Trigger('ARDUINO')
+HWTrigger.init(50)
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
 trigger=[]
@@ -253,7 +253,7 @@ while run:
         #     t_side+=1
         #     d_pos[trial_index]=1
         if trial_type[trial_index]==1:
-            start_trigger = int('2' + str(t_side)+str(d_pos[trial_index]))
+            start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
         else:
             start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
         add_trigger(start_trigger)
