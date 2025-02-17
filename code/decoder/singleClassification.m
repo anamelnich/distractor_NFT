@@ -2,7 +2,8 @@ function posterior = singleClassification(decoder, eeg, labels, type, leftElectr
 
 %epochs.posteriors(test_index) = singleClassification(decoder, epochs.data(:, :, test_index), epochs.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 %ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
-                   
+%eeg 717x64 
+
 %if ~mislocked
 %    mlock
 %end
@@ -60,7 +61,7 @@ elseif type == 1
     end
 
     % Store the data in epochs.data
-    selectedEpochs(:, :) = eeg(:, electrodeIndices);
+    selectedEpochs(:, :) = eeg(:, electrodeIndices); %717x7
 elseif type == 2
     selectedEpochs(:,:) = eeg(:,rightElectrodes);
     n_trials = 1;
@@ -76,7 +77,7 @@ if type == 0
     baseline = mean(eeg(baseline_start:decoder.epochOnset, :, :), 1); % [1 x channels x trials]
     eeg = eeg - baseline; 
 elseif type == 1
-    first_index = round(0.2*decoder.fsamp);
+    first_index = round(0.2*decoder.fsamp); %102
     baseline_period = [1, first_index];
     baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
     eeg = eeg - baseline;
@@ -96,7 +97,7 @@ if (decoder.resample.is_compute)
         resamp = sf_eeg(decoder.resample.time(1:decoder.resample.ratio:end), :, :); %334 to 512 or ~0.65-0.5 = 0.15 to 1-0.5=0.5
         resamp = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
     elseif type == 1
-        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.5*decoder.fsamp));
+        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.5*decoder.fsamp)); %78 through 358
         resamp = sf_eeg(time(1:decoder.resample.ratio:end), :, :); %this doesn't seem right for online cause resample.time(1) = 308
         resamp = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
     end

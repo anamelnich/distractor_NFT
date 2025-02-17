@@ -131,7 +131,7 @@ text_to_analyze = ""
 # args = ["cl_rpc", "openxdf", gdf_file, log_file, "\"\""]
 # subprocess.run(args) 
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('ARDUINO')
+HWTrigger = Trigger('USB2LPT')
 HWTrigger.init(50)
 bci = BCI_tid.BciInterface() 
 trial_index = 0
@@ -142,12 +142,12 @@ n_d_trials = n_trials/2
 
 
 ########################define shape sizes and location based on eccentricity + other graphic elements########################
-screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
-screen_width_px, screen_height_px = screen.get_size()
+# screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+# screen_width_px, screen_height_px = screen.get_size()
 # Replace the FULLSCREEN mode with RESIZABLE mode
-# screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
-# pygame.display.set_caption("D Task")
-# screen_width_px, screen_height_px = 1920, 1080
+screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
+pygame.display.set_caption("D Task")
+screen_width_px, screen_height_px = 1920, 1080
 
 screen_width_cm = 30.5  # in cm
 screen_height_cm = 18.0 
