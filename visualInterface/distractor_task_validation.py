@@ -23,8 +23,8 @@ def add_trigger(code):
 def circle(x, y, radius):
     pygame.draw.circle(screen, (0, 128, 0), (int(x), int(y)), int(radius))
 
-# def square(x, y, width, height, color):
-#     pygame.draw.rect(screen, color, (int(x - width / 2), int(y - height / 2), int(width), int(height)))
+def square(x, y, width, height, color):
+    pygame.draw.rect(screen, color, (int(x - width / 2), int(y - height / 2), int(width), int(height)))
 
 def diamond(x, y, width, height, color):
     pygame.draw.polygon(screen, color, [
@@ -33,10 +33,10 @@ def diamond(x, y, width, height, color):
         (int(x), int(y + height / 2)),  # Bottom
         (int(x - width / 2), int(y))    # Left
     ])
-# def hexagon(x, y, width, height, color):
-#     radius = width / 2
-#     points = [(x + radius * math.cos(math.radians(60 * i)), y + radius * math.sin(math.radians(60 * i))) for i in range(6)]
-#     pygame.draw.polygon(screen, color, [(int(px), int(py)) for px, py in points])
+def hexagon(x, y, width, height, color):
+    radius = width / 2
+    points = [(x + radius * math.cos(math.radians(60 * i)), y + radius * math.sin(math.radians(60 * i))) for i in range(6)]
+    pygame.draw.polygon(screen, color, [(int(px), int(py)) for px, py in points])
 
 def draw_dot(x, y, shape_width, side):
     dot_radius = 5
@@ -73,7 +73,7 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M")
 text_to_save = ""
 text_to_analyze = ""
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('ARDUINO')
+HWTrigger = Trigger('USB2LPT')
 HWTrigger.init(50)
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
@@ -102,6 +102,8 @@ d_from_center = degrees_to_pixels(eccentricity_deg, viewing_distance_cm, pixels_
 shape_definitions = [
     {"type": "diamond", "size_deg": (1.3, 1.3)},   # width x height
     {"type": "circle", "size_deg": 1.3},            # diameter
+    {"type": "hexagon", "size_deg": (1.3, 1.3)},    # width x height
+    {"type": "square", "size_deg": (1.2, 1.2)},     # width x height
 ]
 # Convert shape sizes from degrees to pixels
 for shape in shape_definitions:
@@ -116,7 +118,7 @@ for shape in shape_definitions:
         shape["height_px"] = degrees_to_pixels(height_deg, viewing_distance_cm, pixels_per_cm)
 
 # Calculate shape coordinates
-set_size = 4
+set_size = len(shape_definitions)
 shape_coord = []
 start_angle_offset = math.pi / 2  # 90 degrees to start at the top
 
@@ -173,21 +175,34 @@ for i in range(n_trials):
         chosen_pos = random.choice(available_positions)
         t_pos[i] = chosen_pos
 
-# Generate shape_positions
+
+
+# List of available shapes
+available_shapes = ['Circle', 'Square', 'Diamond', 'Hexagon']
+
+# Generate shape_positions for each trial
 for i in range(n_trials):
-    # Randomize shape positions
+    # Get all positions except the target position (t_pos[i])
     available_positions = [pos for pos in range(1, set_size+1) if pos != t_pos[i]]
     random.shuffle(available_positions)
-
-    shape_names = ['Square', 'Square', 'Square','Square', 'Square', 'Square','Square', 'Square','Square']
+    
+    # Randomly pick 2 shapes from the 4 available
+    selected_shapes = random.sample(available_shapes, 2)
+    # Randomly choose one of these two to be the target shape
+    target_shape = random.choice(selected_shapes)
+    # The distractor shape is the other one in the pair
+    distractor_shape = selected_shapes[0] if selected_shapes[0] != target_shape else selected_shapes[1]
+    
+    # Create a dictionary for this trial's shape positions
     shape_positions_trial = {}
-    shape_positions_trial[t_pos[i]] = ('Circle', random.choice([0, 1]))  # Circle with random dot side
-
-    shape_names = shape_names[:set_size-1]
-    for j, shape in enumerate(shape_names):
-        dot_side = random.choice([0, 1])  # 0=left, 1=right
-        shape_positions_trial[available_positions[j]] = (shape, dot_side)
-
+    # Assign the target shape to the target position with a random dot side (0=left, 1=right)
+    shape_positions_trial[t_pos[i]] = (target_shape, random.choice([0, 1]))
+    
+    # Assign the distractor shape to all other available positions
+    for pos in available_positions:
+        shape_positions_trial[pos] = (distractor_shape, random.choice([0, 1]))
+    
+    # Append this trial's configuration to shape_positions
     shape_positions.append(shape_positions_trial)
 
 
@@ -253,7 +268,7 @@ while run:
         #     t_side+=1
         #     d_pos[trial_index]=1
         if trial_type[trial_index]==1:
-            start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
+            start_trigger = int('2' + str(t_side)+str(d_pos[trial_index]))
         else:
             start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
         add_trigger(start_trigger)
@@ -277,14 +292,24 @@ while run:
                         shape_radius = shape_definitions[1]["radius_px"]  # Circle's radius is at index 1
                         circle(x, y, shape_radius)  # Pass the radius in pixels
                         shape_width = shape_definitions[1]["diameter_px"]
-                        dot_correct = dot_side
 
-                    else:
+                    elif shape_type == 'Square':
+                        shape_width = shape_definitions[3]["width_px"]    # Square's width in pixels
+                        shape_height = shape_definitions[3]["height_px"]  # Square's height in pixels
+                        square(x, y, shape_width, shape_height, color)
+
+                    elif shape_type == 'Diamond':
                         shape_width = shape_definitions[0]["width_px"]    # Diamond's width in pixels
                         shape_height = shape_definitions[0]["height_px"]  # Diamond's height in pixels
                         diamond(x, y, shape_width, shape_height, color)
 
+                    elif shape_type == 'Hexagon':
+                        shape_width = shape_definitions[2]["width_px"]    # Hexagon's width in pixels
+                        shape_height = shape_definitions[2]["height_px"]  # Hexagon's height in pixels
+                        hexagon(x, y, shape_width, shape_height, color)
                     draw_dot(x, y, shape_width, dot_side)
+                    if (i + 1) == t_pos[trial_index]:
+                        dot_correct = dot_side
 
 
                 pygame.display.update()
