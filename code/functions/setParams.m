@@ -13,11 +13,11 @@ function params = setParams(header)
     params.chanlocs = chanlocs(eegIndex(keepIdx));    
 
     params.eegChannels = 1:64; 
-    params.eogChannels = 65:68;
-    params.triggerChannel = 69;
+    params.eogChannels = 65:66;
+    params.triggerChannel = 67;
 
     params.chanLabels = header.Label;
-    params.chanLabels(65:69)=[];
+    params.chanLabels(65:67)=[];
 
     params.channelPlot = find(strcmp({params.chanlocs.labels}, 'PO8'));  % normally this one
     params.plotOption = {'LineWidth', 2};

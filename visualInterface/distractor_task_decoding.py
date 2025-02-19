@@ -131,7 +131,7 @@ text_to_analyze = ""
 # args = ["cl_rpc", "openxdf", gdf_file, log_file, "\"\""]
 # subprocess.run(args) 
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('USB2LPT')
+HWTrigger = Trigger('ARDUINO')
 HWTrigger.init(50)
 bci = BCI_tid.BciInterface() 
 trial_index = 0

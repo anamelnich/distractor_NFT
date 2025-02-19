@@ -19,7 +19,7 @@ def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
 def add_trigger(code):
     timestamp = pygame.time.get_ticks()
     trigger.append((code, timestamp, trial_index))
-    HWTrigger.signal(code)
+    # HWTrigger.signal(code)
 def circle(x, y, radius):
     pygame.draw.circle(screen, (0, 128, 0), (int(x), int(y)), int(radius))
 
@@ -73,7 +73,7 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M")
 text_to_save = ""
 text_to_analyze = ""
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('USB2LPT')
+HWTrigger = Trigger('ARDUINO')
 HWTrigger.init(50)
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
@@ -254,7 +254,8 @@ while run:
         pygame.draw.line(screen, (225, 225, 225), (x_center - fixation_size, y_center), (x_center + fixation_size, y_center), line_width)
         pygame.draw.line(screen, (225, 225, 225), (x_center, y_center - fixation_size), (x_center, y_center + fixation_size), line_width)
         pygame.display.update()
-        add_trigger(60)
+        add_trigger(60) 
+        HWTrigger.signal(6)  
         pygame.time.delay(1000)  # Fixation cross duration       
 
         # Track the start time of the trial
@@ -268,10 +269,11 @@ while run:
         #     t_side+=1
         #     d_pos[trial_index]=1
         if trial_type[trial_index]==1:
-            start_trigger = int('2' + str(t_side)+str(d_pos[trial_index]))
+            start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
         else:
             start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
-        add_trigger(start_trigger)
+        add_trigger(start_trigger) 
+        HWTrigger.signal(start_trigger)
         while not trial_end:
 
             # Check if 2000ms have passed
