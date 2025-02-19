@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e5'
+subjectID='e10'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -15,11 +15,11 @@ data = struct();
 disp(['Loading the data from ' dataInfo.name]);
 [data.calibration, data.validation, data.training, data.decoding] = loadData([dataInfo.folder '/' dataInfo.name '/*']);
 delete sopen.mat
-
+unique(data.training.data(:,67))
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
 %%%%%%%%%%%%%%%%%%%%%%%%
-cfg = setParams(data.training.header);
+cfg = setParams(data.validation.header);
 
 fields = fieldnames(data);
 for i = 1:numel(fields)
