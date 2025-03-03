@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e10'
+subjectID='e12'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -15,7 +15,7 @@ data = struct();
 disp(['Loading the data from ' dataInfo.name]);
 [data.calibration, data.validation, data.training, data.decoding] = loadData([dataInfo.folder '/' dataInfo.name '/*']);
 delete sopen.mat
-unique(data.training.data(:,67))
+%unique(data.validation.data(:,67))
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,7 +94,7 @@ trainingdata.newlabels(trainingdata.labels == 2) = 1;
 disp('== Synchronous Classification == ');
 % [x, y, t, auc, opt] = perfcurve(~epochs.labels,1-epochs.posteriors, 1, 'Prior', 'uniform');
 [x, y, t, auc, opt] = perfcurve(trainingdata.newlabels,trainingdata.posteriors, 1, 'Prior', 'uniform');
-%threshold = 0.5;
+% threshold = 0.5;
 threshold = t(x == opt(1) & y == opt(2));
 disp(['AUC score : ' num2str(auc, '%.2f') ' Threshold: ' num2str(threshold, '%.2f')]);
 disp('Confusion Matrix: ');

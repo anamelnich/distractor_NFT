@@ -7,7 +7,7 @@ from datetime import datetime
 import sys
 from pygame.locals import *
 ###### These are the imports to make the hardware triggers work ######
-from python_client import Trigger
+
 from cnbiloop import BCI_tid ##############new
 import threading
 import subprocess
@@ -21,7 +21,7 @@ def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
 def add_trigger(code):
     timestamp = pygame.time.get_ticks()
     trigger.append((code, timestamp, trial_index))
-    # HWTrigger.signal(code)
+
 # def send_tid(value):
 #     bci.id_msg_bus.SetEvent(value)
 #     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
@@ -116,11 +116,11 @@ text_to_analyze = ""
 # args = ["cl_rpc", "openxdf", gdf_file, log_file, "\"\""]
 # subprocess.run(args) 
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-# HWTrigger = Trigger('USB2LPT')
-# HWTrigger.init(50)
+
+trigger=[]
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
-trigger=[]
+
 responses = []
 n_trials = 60
 n_d_trials = n_trials/2
@@ -284,7 +284,8 @@ while run:
         pygame.draw.line(screen, (225, 225, 225), (x_center - fixation_size, y_center), (x_center + fixation_size, y_center), line_width)
         pygame.draw.line(screen, (225, 225, 225), (x_center, y_center - fixation_size), (x_center, y_center + fixation_size), line_width)
         pygame.display.update()
-        add_trigger(60)
+        add_trigger(6)
+        print(6)
         pygame.time.delay(1000)  # Fixation cross duration       
 
         # Track the start time of the trial
@@ -298,17 +299,20 @@ while run:
         #     t_side+=1
         #     d_pos[trial_index]=1
         if trial_type[trial_index]==1:
-            start_trigger = int('2' + str(t_side)+str(d_pos[trial_index]))
-        else:
             start_trigger = int('1' + str(t_side)+str(d_pos[trial_index]))
+        else:
+            start_trigger = int( '1' + str(t_side)+str(d_pos[trial_index]))
         add_trigger(start_trigger)
+        print(start_trigger)
         while not trial_end:
 
             # Check if 2000ms have passed
             if pygame.time.get_ticks() - array_start_time >= 2000:
                 trial_end = True
                 response = 3
-                add_trigger(23) if trial_type[trial_index]==1 else add_trigger(13)
+                # add_trigger(43) if trial_type[trial_index]==1 else add_trigger(13)
+                add_trigger(13)
+                print(13)
             else:
             
                 for i, (x, y) in enumerate(shape_coord):
@@ -354,12 +358,14 @@ while run:
                                 is_correct = (dot_correct == 1)
 
                             response = 1 if is_correct else 2
-                            if trial_type[trial_index] == 1:
-                                trigger_code = 21 if is_correct else 22
-                            else:
-                                trigger_code = 11 if is_correct else 12
+                            trigger_code = 11 if is_correct else 12
+                            # if trial_type[trial_index] == 1:
+                            #     trigger_code = 41 if is_correct else 42
+                            # else:
+                            #     trigger_code = 11 if is_correct else 12
                             
                             add_trigger(trigger_code)
+                            print(trigger_code)
 
         # After the trial ends, clear the screen
         screen.fill((0, 0, 0))
@@ -400,7 +406,8 @@ while run:
         # send_tid(20)
         run = False  # End the loop after all trials are completed
 
-basename = sys.argv[1] #file name and path from expLauncher
+# basename = sys.argv[1] #file name and path from expLauncher
+basename = ""
 # Save the collected trial data to a text file with a timestamp
 #output_file = os.path.join(output_folder, f"MCSE_s0{subject_number}_s0{subject_session}_r0{subject_run}_{timestamp}_set{set_size}_output.txt")
 output_file = f"{basename}.output.txt"
@@ -414,8 +421,9 @@ with open(analysis_file, "w") as text_file:
     text_file.write(text_to_analyze)
 
 # Save the triggers to a triggers.txt file
-#trigger_file = os.path.join(output_folder, f"MCSE_s0{subject_number}_s0{subject_session}_r0{subject_run}_{timestamp}_set{set_size}_triggers.txt")
-trigger_file = f"{basename}.triggers.txt"
+# trigger_file = os.path.join(output_folder, f"MCSE_s0{subject_number}_s0{subject_session}_r0{subject_run}_{timestamp}_set{set_size}_triggers.txt")
+trigger_file = "triggers.txt"
+# trigger_file = f"{basename}.triggers.txt"
 with open(trigger_file, "w") as trigger_txt:
     for code, timestamp, trial in trigger:
         #formatted_trigger = f"[{code}]"

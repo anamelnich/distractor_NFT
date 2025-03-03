@@ -13,7 +13,7 @@ function badEpochs = artRej(trainEpochs, params)
 % - badEpochs: Logical array of bad epochs
 
 % Define Artifact Thresholds
-voltageStepThreshold = 30;      
+voltageStepThreshold = 50;      
 absoluteAmplitudeThreshold = 125; 
 
 % Define Window for Activity Change (500 ms)

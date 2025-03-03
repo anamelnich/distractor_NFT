@@ -1,4 +1,4 @@
-subjectID = 'e5';
+subjectID = 'e12';
 % sessions = {'validation', 'training'};
 
 %%%%%%%%%%%%%%%%%%%%
@@ -7,51 +7,66 @@ subjectID = 'e5';
 clearvars -except subjectID  sessions plot_flag;
 close all; clc; rng('default');
 addpath(genpath('../functions'));
-%%%%%%%%%%%%%%%%%%
-%% Load dataset %%
-%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%% Load EEG dataset %%
+%%%%%%%%%%%%%%%%%%%%%%
 dataPath = [pwd '/../../data/'];
 dataInfo = dir([dataPath '/' subjectID '_20*']);
 data = struct();
 disp(['Loading the data from ' dataInfo.name]);
 [data.calibration, data.validation, data.training, data.decoding] = loadData([dataInfo.folder '/' dataInfo.name '/*']);
 delete sopen.mat
+cfg = setParams(data.training.header);
 
-%% Load behavioral data
-% [behtraining, behdecoding] = loadBehData([dataInfo.folder '/' dataInfo.name '/*']);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Load behavioral dataset %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+beh = struct();
+[beh.behtraining, beh.behvalidation, beh.behdecoding] = loadBehData([dataInfo.folder '/' dataInfo.name '/*']);
 
-%%
-% eof_day1 = training.eof(1:4); 
-% % eof_day2 = training.eof(5:6); 
-% training1 = struct();
-% % training2 = struct();
-% 
-% training1.data = training.data(1:eof_day1(end), :);
-% training1.eof = eof_day1;
-% training1.header = training.header;
-% 
-% % training2.data = training.data(eof_day1(end) + 1:eof_day2(end), :);
-% % training2.eof = eof_day2 - eof_day1(end); 
-% % training2.header = training.header; 
-% 
-% eof_day1 = decoding.eof(1:4); 
-% eof_day2 = decoding.eof(5:10); 
-% decoding1 = struct();
-% decoding2 = struct();
-% 
-% decoding1.data = decoding.data(1:eof_day1(end), :);
-% decoding1.eof = eof_day1;
-% decoding1.header = decoding.header;
-% 
-% decoding2.data = decoding.data(eof_day1(end) + 1:eof_day2(end), :);
-% decoding2.eof = eof_day2 - eof_day1(end); 
-% decoding2.header = decoding.header; 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Behavioral Analysis %%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+behfields = fieldnames(beh);
+for i = 1:numel(behfields)
+    fname = behfields{i};
+    if isempty(beh.(fname).trial)
+        beh = rmfield(beh, fname);
+        continue;
+    end
+    loc = beh.(fname);
+    loc.RTd = loc.RT(loc.trial_type==1);
+    loc.RTd_mean = mean(loc.RTd);
+    loc.RTd_std = std(loc.RTd);
+    
+    loc.RTd_correct = loc.RT(loc.trial_type==1 & loc.response == 1);
+    loc.RTd_mean_corr = mean(loc.RTd_correct);
+    loc.RTd_std_corr = std(loc.RTd_correct);
+    
+    loc.RTnd = loc.RT(loc.trial_type==0);
+    loc.RTnd_mean = mean(loc.RTnd);
+    loc.RTnd_std = std(loc.RTnd);
+    
+    loc.RTnd_correct = loc.RT(loc.trial_type==0 & loc.response == 1);
+    loc.RTnd_mean_corr = mean(loc.RTnd_correct);
+    loc.RTnd_std_corr = std(loc.RTnd_correct);
+    
+    beh.(fname) = loc;
+
+end
+
+figpath = '../../Figures/';
+behfields = fieldnames(beh);
+for i = 1:numel(behfields)
+    fname = behfields{i};
+    plotBehavior(beh.(fname),cfg,[subjectID ' ' fname],figpath);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
 %%%%%%%%%%%%%%%%%%%%%%%%
-cfg = setParams(data.training.header);
 
 fields = fieldnames(data);
 for i = 1:numel(fields)
@@ -87,6 +102,15 @@ for i = 1:numel(fields)
     data.(fname).data(:,:) = filtfilt(b,a,data.(fname).data(:,:));
 end
 
+%EOG filter
+[b,a] = butter(cfg.EOG.spectralFilter.order, cfg.EOG.spectralFilter.freqs./(cfg.fsamp/2), 'bandpass');
+cfg.EOG.spectralFilter.b = b;
+cfg.EOG.spectralFilter.a = a;
+for i = 1:numel(fields)
+    fname = fields{i};
+    data.(fname).EOG(:,:) = filtfilt(b,a,data.(fname).EOG(:,:));
+end
+
 %%%%%%%%%%%%%%%%%%%%%
 %% %%%% ICA %%%%%%%%%                   
 %%%%%%%%%%%%%%%%%%%%%
@@ -114,12 +138,14 @@ for i = 1:numel(fields)
     fname = fields{i};
     dataStruct = data.(fname)
     epochs.data = nan(length(cfg.epochSamples), length(cfg.chanlocs), length(dataStruct.index.pos));
+    epochs.EOG = nan(length(cfg.epochSamples), length(cfg.eogChannels), length(dataStruct.index.pos));
     epochs.labels = dataStruct.index.typ;
     epochs.file_id = nan(length(dataStruct.index.typ), 1);
     epochs.file_type = cell(length(dataStruct.index.typ), 1);
 
     for i_trial = 1:length(dataStruct.index.pos)
-        epochs.data(:, :, i_trial) = dataStruct.data(dataStruct.index.pos(i_trial) + cfg.epochSamples, :);    
+        epochs.data(:, :, i_trial) = dataStruct.data(dataStruct.index.pos(i_trial) + cfg.epochSamples, :); 
+        epochs.EOG(:, :, i_trial) = dataStruct.EOG(dataStruct.index.pos(i_trial) + cfg.epochSamples, :);
         temp = find(dataStruct.index.pos(i_trial) <= dataStruct.eof, 1, 'first');
         epochs.file_id(i_trial) = temp;
     end
@@ -133,7 +159,17 @@ end
 
 for i = 1:numel(fields)
     fname = fields{i};
-    data.(subjectID).(fname) = computeGrandAvg(data.(fname).epochs.data, data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
+    data.(subjectID).(fname) = computeGrandAvg(data.(fname).epochs.data, ...
+        data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
+end
+
+%%%%%%%%%%%%%%%
+%% EOG plots %%
+%%%%%%%%%%%%%%%
+
+for i = 1:numel(fields)
+    fname = fields{i};
+    plotEOG(data.(fname).epochs.EOG, data.(fname).epochs.labels, cfg, [subjectID ' ' fname], figpath)
 end
 
 %%%%%%%%%%%%%%%
