@@ -1,6 +1,7 @@
 #!/bin/bash
 sudo modprobe -r lp
-sudo chmod 777 /dev/parport0
+#sudo chmod 777 /dev/parport0
+sudo chmod 777 /dev/ttyACM0
 read -p "subjectID: " subID
 read -p "[c] calibration, [v] validation, [t] training or [d] decoding? " mode
 

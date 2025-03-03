@@ -5,7 +5,9 @@ function dataset = preprocessDataset(dataset, cfg,fname)
     end
     % Extract trigger and EEG data
     dataset.trigger = dataset.data(:, cfg.triggerChannel);
+    dataset.EOG = dataset.data(:, cfg.eogChannels);
     dataset.data = dataset.data(:, cfg.eegChannels);
+    
 
     % Compute index
     dataset.index = computeIndex(dataset.trigger, 4);

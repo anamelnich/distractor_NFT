@@ -1,0 +1,14 @@
+Trial 1 - Task: 0 - Feedback: 3
+Trial 2 - Task: 0 - Feedback: 3
+Trial 3 - Task: 1 - Feedback: 3
+Trial 4 - Task: 1 - Feedback: 3
+Trial 5 - Task: 0 - Feedback: 3
+Trial 6 - Task: 0 - Feedback: 3
+Trial 7 - Task: 1 - Feedback: 3
+Trial 8 - Task: 0 - Feedback: 3
+Trial 9 - Task: 0 - Feedback: 3
+Trial 10 - Task: 1 - Feedback: 3
+Trial 11 - Task: 1 - Feedback: 3
+Trial 12 - Task: 1 - Feedback: 3
+Trial 13 - Task: 0 - Feedback: 3
+Trial 14 - Task: 0 - Feedback: 3

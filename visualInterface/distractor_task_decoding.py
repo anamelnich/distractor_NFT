@@ -21,7 +21,8 @@ def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
 def add_trigger(code):
     timestamp = pygame.time.get_ticks()
     trigger.append((code, timestamp, trial_index))
-    HWTrigger.signal(code)
+    if code != None:
+        HWTrigger.signal(code)
 def send_tid(value):
     bci.id_msg_bus.SetEvent(value)
     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
@@ -304,7 +305,7 @@ while run:
         pygame.draw.line(screen, (225, 225, 225), (x_center - fixation_size, y_center), (x_center + fixation_size, y_center), line_width)
         pygame.draw.line(screen, (225, 225, 225), (x_center, y_center - fixation_size), (x_center, y_center + fixation_size), line_width)
         pygame.display.update()
-        add_trigger(60)
+        add_trigger(6)
         pygame.time.delay(1000)  # Fixation cross duration       
 
         # Track the start time of the trial
@@ -329,7 +330,7 @@ while run:
             if pygame.time.get_ticks() - array_start_time >= 2000:
                 trial_end = True
                 response = 3
-                add_trigger(23) if trial_type[trial_index]==1 else add_trigger(13)
+                add_trigger(13)
             elif wait:
                 screen.fill((0, 0, 0))
                 pygame.display.update()
@@ -379,10 +380,10 @@ while run:
                                 is_correct = (dot_correct == 1)
 
                             response = 1 if is_correct else 2
-                            if trial_type[trial_index] == 1:
-                                trigger_code = 21 if is_correct else 22
-                            else:
-                                trigger_code = 11 if is_correct else 12
+                            # if trial_type[trial_index] == 1:
+                            #     trigger_code = 21 if is_correct else 22
+                            # else:
+                            trigger_code = 11 if is_correct else 12
                             
                             add_trigger(trigger_code)
                             screen.fill((0, 0, 0))

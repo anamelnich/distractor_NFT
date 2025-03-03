@@ -1,5 +1,5 @@
 function data = computeGrandAvg(trainEpochs, trainLabels, fileID, params, session)
-%computeGrandAvg(training1_epochs.data, training1_epochs.labels, training1_epochs.file_id,cfg, [subjectID ' offline']);
+%data.(subjectID).(fname) = computeGrandAvg(data.(fname).epochs.data, data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Spatial Filter %%
@@ -49,6 +49,7 @@ PO8index = find(ismember(params.chanLabels,'PO8'));
 %%%%%%%%%%%%%%%%
 %% Plot ERPs %%
 %%%%%%%%%%%%%%%%
+%computeGrandAvg(data.(fname).epochs.data, data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
 
 path = '../../Figures/';
 ROIavg = calculateGrandAvg(trainEpochs, trainLabels, leftElectrodeIndices, rightElectrodeIndices);

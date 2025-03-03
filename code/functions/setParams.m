@@ -26,7 +26,8 @@ function params = setParams(header)
     [0, 0, 1],        % Blue
     [1, 0.6, 0.6],    % Light Red
     [0.6, 0.6, 1],    % Light Blue
-    [0, 1, 0]         % Green
+    [0, 1, 0],         % Green
+    [0, 0, 0]         % Black
             };
     
     %%%%%%%%%%%%%%
@@ -54,6 +55,9 @@ function params = setParams(header)
     %%%%%%%%%%%%%%%%%%%%%
     params.spectralFilter.freqs = [1 40];  % cut-off frequencies
     params.spectralFilter.order = 2;  % 2*params.fsamp for FIR filter
+    
+    params.EOG.spectralFilter.freqs = [1 10];  % cut-off frequencies
+    params.EOG.spectralFilter.order = 2;  % 2*params.fsamp for FIR filter
 
     %%%%%%%%%%%%%%%%%%%%
     %% Spatial Filter %%
