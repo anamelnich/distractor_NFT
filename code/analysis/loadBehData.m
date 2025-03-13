@@ -32,6 +32,7 @@ for i = 1:length(dirNames)
     runNumber = repelem(i, numTrials)';
     triggerData = readmatrix([fileName '.triggers.txt']);
     triggerData(triggerData(:, 2) == 6, :) = [];
+    % triggerData(triggerData(:, 2) == 60, :) = [];
     if trainingFile(i)
         for j = 1:numColumns
             behtraining.(beh_var{j}) = cat(1, behtraining.(beh_var{j}), beh(:, j));

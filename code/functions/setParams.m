@@ -53,7 +53,7 @@ function params = setParams(header)
     %%%%%%%%%%%%%%%%%%%%%
     %% Spectral Filter %%
     %%%%%%%%%%%%%%%%%%%%%
-    params.spectralFilter.freqs = [1 40];  % cut-off frequencies
+    params.spectralFilter.freqs = [1 10];  % cut-off frequencies
     params.spectralFilter.order = 2;  % 2*params.fsamp for FIR filter
     
     params.EOG.spectralFilter.freqs = [1 10];  % cut-off frequencies
