@@ -10,7 +10,7 @@ import queue
 import os 
 from datetime import datetime 
 import heapq
-from python_client import Trigger
+# from python_client import Trigger
 
 #Part 1 evaluates reading ability
 #Part 2 provides baseline for RT analysis
@@ -37,7 +37,7 @@ audio_queue = queue.Queue()
 
 # Initialize Vosk model
 try:
-    model = Model("./vosk/vosk-model-en-us-0.22")
+    model = Model("./vosk/vosk-model-small-en-us-0.15")
 
     vocabulary = '["red", "green", "blue", "yellow"]'
     recognizer = KaldiRecognizer(model, SAMPLE_RATE, vocabulary)
@@ -212,15 +212,10 @@ class StroopTask:
     def run_trial(self, stimulus, is_circle=False, ink_color=None, trial_type=None):
         print(f"\n--- Starting trial: type: {trial_type}, stimulus: {stimulus}, ink_color: {ink_color}, is_circle: {is_circle} ---")
         
-        # Blank screen and fixation period
-        # screen.fill(BLACK)
-        # pygame.display.flip()
-        # pygame.time.wait(500)
+
         self.display_fixation()
         self.parallel.signal(6)
-        # wait_duration = random.randrange(1000, 2250, 250)
-        # print(f"Fixation display for {wait_duration} ms")
-        # pygame.time.wait(wait_duration)
+
         pygame.time.wait(500)
         
         # Display the stimulus (for text or circle)
@@ -306,8 +301,8 @@ class StroopTask:
         
     def save_data(self, part_number):
         # Create results directory if it doesn't exist
-        if not os.path.exists('results'):
-            os.makedirs('results')
+        # if not os.path.exists('results'):
+        #     os.makedirs('results')
             
         # Create filename with timestamp and part number
         # filename = f'results/stroop_part{part_number}_{self.timestamp}.txt'
