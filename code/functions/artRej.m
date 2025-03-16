@@ -14,34 +14,35 @@ function badEpochs = artRej(trainEpochs, params)
 
 % Define Artifact Thresholds
 voltageStepThreshold = 50;      
-absoluteAmplitudeThreshold = 125; 
+absoluteAmplitudeThreshold = 75; 
 
+timeIdx = params.epochRejection.time;
+epochData = trainEpochs(timeIdx, :, :);
 % Define Window for Activity Change (500 ms)
 windowDurationSec = 0.5;  % 500 ms
 windowSamples = round(windowDurationSec * params.fsamp);  
 
 % Dimensions of trainEpochs
-[n_time, n_channels, n_epochs] = size(trainEpochs);
+[n_time, n_channels, n_epochs] = size(epochData);
 
 % Initialize Logical Arrays to Mark Bad Epochs
 badEpoch_VoltageStep = false(1, n_epochs);
-badEpoch_ActivityChange = false(1, n_epochs);
 badEpoch_AbsAmplitude = false(1, n_epochs);
 
 % =====================================
 % 1. Voltage Step Artifact Detection
 % =====================================
-
-% Compute the difference between consecutive samples for all epochs and channels
-% Resulting size: [n_time-1 x n_channels x n_epochs]
-voltageSteps = abs(diff(trainEpochs, 1, 1));
-
-% Check if any voltage step exceeds the threshold in any channel for each epoch
-% Resulting size after any(): [1 x 1 x n_epochs]
-voltageStepExceeds = any(any(voltageSteps > voltageStepThreshold, 1), 2);  
-
-% Convert to logical array [1 x n_epochs]
-badEpoch_VoltageStep = squeeze(voltageStepExceeds);
+% 
+% % Compute the difference between consecutive samples for all epochs and channels
+% % Resulting size: [n_time-1 x n_channels x n_epochs]
+% voltageSteps = abs(diff(epochData, 1, 1));
+% 
+% % Check if any voltage step exceeds the threshold in any channel for each epoch
+% % Resulting size after any(): [1 x 1 x n_epochs]
+% voltageStepExceeds = any(any(voltageSteps > voltageStepThreshold, 1), 2);  
+% 
+% % Convert to logical array [1 x n_epochs]
+% badEpoch_VoltageStep = squeeze(voltageStepExceeds);
 
 
 % =====================================
@@ -50,7 +51,7 @@ badEpoch_VoltageStep = squeeze(voltageStepExceeds);
 
 % Check if any sample in any channel exceeds the absolute amplitude threshold
 % Resulting size: [n_time x n_channels x n_epochs]
-absAmplitudes = abs(trainEpochs);
+absAmplitudes = abs(epochData);
 
 % Check if any absolute amplitude exceeds the threshold
 absAmplitudeExceeds = any(any(absAmplitudes > absoluteAmplitudeThreshold, 1), 2);
@@ -63,6 +64,7 @@ badEpoch_AbsAmplitude = squeeze(absAmplitudeExceeds);
 % =====================================
 
 % An epoch is bad if any of the three conditions are true
-badEpochs = badEpoch_VoltageStep | badEpoch_AbsAmplitude;
+% badEpochs = badEpoch_VoltageStep | badEpoch_AbsAmplitude;
+badEpochs = badEpoch_AbsAmplitude;
 
 end

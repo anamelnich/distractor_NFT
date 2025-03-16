@@ -1,5 +1,5 @@
 function posterior = singleClassification(decoder, eeg, labels, type, leftElectrodes, rightElectrodes) %singleClassification(decoder, epochs.data(:, :, test_index))
-
+rng(1)
 %epochs.posteriors(test_index) = singleClassification(decoder, epochs.data(:, :, test_index), epochs.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 %ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
 %eeg 717x64 
@@ -23,7 +23,36 @@ if type == 1 || type == 2
     eeg(:,decoder.chantoremove)=[];
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Baseline correction %%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if type == 0
+    baseline_start = decoder.epochOnset - round(0.2*decoder.fsamp); %256 - 102
+    baseline = mean(eeg(baseline_start:decoder.epochOnset, :, :), 1); % [1 x channels x trials]
+    eeg = eeg - baseline; 
+elseif type == 1
+    first_index = round(0.2*decoder.fsamp); %102
+    baseline_period = [1, first_index];
+    baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
+    eeg = eeg - baseline;
+   % epochStart = first_index - round(0.5*decoder.fsamp);
+    %eeg = eeg(epochStart:end,:,:);
+    %decoder.resample.time = round(0.1*params.fsamp)+1:round(0.6*params.fsamp); %check if this makes sense to do
+%     sf_eeg = eeg(first_index:end,:,:);
+elseif type == 2
+    eeg = eeg;
+%     sf_eeg = eeg;
+end
+% sf_eeg = eeg;
+
 %% Select electrodes based on epoch labels
+idx0 = find(labels == 0);
+N0 = length(idx0);
+perm0 = randperm(N0);
+Nleft0 = floor(N0/2);             % Number assigned to left
+Nright0 = N0 - Nleft0;            % Remainder assigned to right
+idxLeft0 = idx0( perm0(1:Nleft0) );
+idxRight0 = idx0( perm0(Nleft0+1:end) );
 
 n_samples = size(eeg, 1);
 n_electrodes = length(leftElectrodes); 
@@ -34,10 +63,27 @@ if type == 0
         label = labels(i_trial);
     
         % Select electrode indices based on the label
-        if label == 1 || label == 0 % Distractor on right
+        if label == 1  %|| label == 0 % Distractor on right
             electrodeIndices = leftElectrodes;
+            % selectedEpochs(:, :, i_trial) = eeg(:, leftElectrodes, i_trial);
         elseif label == 2 %|| label == 0 % Distractor on left or no distractor
             electrodeIndices = rightElectrodes;
+            % selectedEpochs(:, :, i_trial) = eeg(:, rightElectrodes, i_trial);
+        elseif label == 0
+            if ismember(i_trial, idxLeft0)
+                electrodeIndices = leftElectrodes;
+                % countLeft0 = countLeft0 + 1;
+            else
+                electrodeIndices = rightElectrodes;
+                % countRight0 = countRight0 + 1; 
+            end
+            % for e = 1:n_electrodes
+            %     leftChanData  = eeg(:, leftElectrodes(e),  i_trial);
+            %     rightChanData = eeg(:, rightElectrodes(e), i_trial);
+            % 
+            %     % Take element-wise average
+            %     selectedEpochs(:, e, i_trial) = 0.5 * (leftChanData + rightChanData);
+            % end
         else
             error('Unknown label');
         end
@@ -66,30 +112,39 @@ elseif type == 2
     selectedEpochs(:,:) = eeg(:,rightElectrodes);
     n_trials = 1;
 end
+% disp(['Label=0: ' num2str(length(idxLeft0)) ' trials used LEFT electrodes, ' ...
+%       num2str(length(idxRight0)) ' trials used RIGHT electrodes.']);
 eeg = selectedEpochs;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Baseline correction %%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if type == 0
-    baseline_start = decoder.epochOnset - round(0.2*decoder.fsamp); %256 - 102
-    baseline = mean(eeg(baseline_start:decoder.epochOnset, :, :), 1); % [1 x channels x trials]
-    eeg = eeg - baseline; 
-elseif type == 1
-    first_index = round(0.2*decoder.fsamp); %102
-    baseline_period = [1, first_index];
-    baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
-    eeg = eeg - baseline;
-   % epochStart = first_index - round(0.5*decoder.fsamp);
-    %eeg = eeg(epochStart:end,:,:);
-    %decoder.resample.time = round(0.1*params.fsamp)+1:round(0.6*params.fsamp); %check if this makes sense to do
-%     sf_eeg = eeg(first_index:end,:,:);
-elseif type == 2
-    eeg = eeg;
-%     sf_eeg = eeg;
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %% Baseline correction %%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% if type == 0
+%     baseline_start = decoder.epochOnset - round(0.2*decoder.fsamp); %256 - 102
+%     baseline = mean(eeg(baseline_start:decoder.epochOnset, :, :), 1); % [1 x channels x trials]
+%     eeg = eeg - baseline; 
+% elseif type == 1
+%     first_index = round(0.2*decoder.fsamp); %102
+%     baseline_period = [1, first_index];
+%     baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
+%     eeg = eeg - baseline;
+%    % epochStart = first_index - round(0.5*decoder.fsamp);
+%     %eeg = eeg(epochStart:end,:,:);
+%     %decoder.resample.time = round(0.1*params.fsamp)+1:round(0.6*params.fsamp); %check if this makes sense to do
+% %     sf_eeg = eeg(first_index:end,:,:);
+% elseif type == 2
+%     eeg = eeg;
+% %     sf_eeg = eeg;
+% end
+% % sf_eeg = eeg;
+
+%% Spatial Filter
+n_trials = size(eeg, 3);
+sf_eeg = nan(size(eeg,1), size(decoder.spatialFilter,2), n_trials);
+for i_trial = 1:n_trials
+    sf_eeg(:,:,i_trial) = eeg(:,:,i_trial) * decoder.spatialFilter;
 end
-sf_eeg = eeg;
 
 %% Temporal Information
 if (decoder.resample.is_compute)

@@ -1,18 +1,18 @@
 function decoder = computeDecoder(trainEpochs, trainLabels, params)
 %%
-
+rng(1)
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Artifact Rejection %%
 %%%%%%%%%%%%%%%%%%%%%%%%
 % if (params.epochRejection.isCompute) 
 %     badEpochs = artRej(trainEpochs, params);
-%     
+% 
 %     badEpochIndices = find(badEpochs);
 %     nTrials = size(trainEpochs,3);
 %     trainEpochs(:, :, badEpochIndices) = [];
 %     trainLabels(badEpochIndices) = [];
-%     
-%     
+% 
+% 
 %     disp([num2str(sum(badEpochs)) ' / ' num2str(nTrials) ' trials are removed: ' num2str(100*sum(badEpochs)/nTrials) ' %']);
 % 
 % end
@@ -24,12 +24,22 @@ if strcmp(params.spatialFilter.type, 'CAR');
     trainEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Baseline correction %%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+baseline_period = [-0.2, 0];
+baseline_indices = find(params.epochTime >= baseline_period(1) & params.epochTime <= baseline_period(2));
+baseline = mean(trainEpochs(baseline_indices, :, :), 1); % [1 x channels x trials]
+trainEpochs = trainEpochs - baseline;
+
 %%%%%%%%%%%%%%%%%%%
 %% ROI selection %%
 %%%%%%%%%%%%%%%%%%%
 
 LeftElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3','PO5','PO7'};
 RightElectrodes = {'P2', 'P4', 'P6', 'P8', 'PO4', 'PO6','PO8'};
+% LeftElectrodes = {'PO7'};
+% RightElectrodes = {'PO8'};
 leftElectrodeIndices = find(ismember(params.chanLabels,LeftElectrodes));
 rightElectrodeIndices = find(ismember(params.chanLabels,RightElectrodes));
 
@@ -38,15 +48,39 @@ n_trials = size(trainEpochs, 3);
 n_electrodes = length(LeftElectrodes); 
 selectedEpochs = nan(n_samples, n_electrodes, n_trials);
 
+idx0 = find(trainLabels == 0);
+N0 = length(idx0);
+perm0 = randperm(N0);
+Nleft0 = floor(N0/2);             % Number assigned to left
+Nright0 = N0 - Nleft0;            % Remainder assigned to right
+idxLeft0 = idx0( perm0(1:Nleft0) );
+idxRight0 = idx0( perm0(Nleft0+1:end) );
+
 for i_trial = 1:n_trials
     label = trainLabels(i_trial);
 
     % Select electrode indices based on the label
-    if label == 1 || label == 0 % Distractor on right
+    if label == 1 %|| label == 0 % Distractor on right
         electrodeIndices = leftElectrodeIndices;
+        % selectedEpochs(:, :, i_trial) = trainEpochs(:, leftElectrodeIndices, i_trial);
     elseif label == 2 %|| label == 0 % Distractor on left or no distractor
         electrodeIndices = rightElectrodeIndices;
-        
+        % selectedEpochs(:, :, i_trial) = trainEpochs(:, rightElectrodeIndices, i_trial);
+    elseif label == 0
+         if ismember(i_trial, idxLeft0)
+            electrodeIndices = leftElectrodeIndices;
+            % countLeft0 = countLeft0 + 1;
+        else
+            electrodeIndices = rightElectrodeIndices;
+            % countRight0 = countRight0 + 1; 
+        end
+        % for e = 1:n_electrodes
+        %     leftChanData  = trainEpochs(:, leftElectrodeIndices(e),  i_trial);
+        %     rightChanData = trainEpochs(:, rightElectrodeIndices(e), i_trial);
+        % 
+        %     Take element-wise average
+        %     selectedEpochs(:, e, i_trial) = 0.5 * (leftChanData + rightChanData);
+        % end
     else
         error('Unknown label');
     end
@@ -55,20 +89,26 @@ for i_trial = 1:n_trials
     selectedEpochs(:, :, i_trial) = trainEpochs(:, electrodeIndices, i_trial);
 
 end
+
+
 classEpochs = selectedEpochs;
 %relabel epochs to be 1 (Distractor) and 0 (No Distractor)
 trainLabels(trainLabels == 2) = 1;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Baseline correction %%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-baseline_period = [-0.2, 0];
-baseline_indices = find(params.epochTime >= baseline_period(1) & params.epochTime <= baseline_period(2));
-baseline = mean(classEpochs(baseline_indices, :, :), 1); % [1 x channels x trials]
-classEpochs = classEpochs - baseline;
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %% Baseline correction %%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% baseline_period = [-0.2, 0];
+% baseline_indices = find(params.epochTime >= baseline_period(1) & params.epochTime <= baseline_period(2));
+% baseline = mean(classEpochs(baseline_indices, :, :), 1); % [1 x channels x trials]
+% classEpochs = classEpochs - baseline;
 
+%% Spatial Filter
+filterMatrix = get_spatial_filter('CCA', classEpochs, trainLabels, params);
 
+filterMatrix = filterMatrix(:, 1:params.spatialFilter.nComp);
+classEpochs = apply_spatialFilter(classEpochs, filterMatrix);
 %% Temporal Information
 if (params.resample.is_compute)
     resamps = classEpochs(params.resample.time(1:params.resample.ratio:end), :, :); 
@@ -154,14 +194,17 @@ w = model.Coeffs(2,1).Linear;
 mu = model.Coeffs(2,1).Const;
 % distance = classifierEpochs' * q * classifierEpochs + classifierEpochs' * w + mu;
 distance = classifierEpochs' * w + mu;
-
-p1 = 0.025;
+% 
+p1 = 0.015;
 p2 = 1-p1;
 bcoeff1=-log((1-p1)/p1)/prctile(distance,100*p1);
 bcoeff2=-log((1-p2)/p2)/prctile(distance,100*p2);
 b = (bcoeff1+bcoeff2)/2;
 
 model = @(x) 1./(1+exp(-b*(x*w+mu)));
+% 
+% b = 1/std(distance);
+% model = @(x) 1 ./ (1 + exp(-b * (x*w + mu)));
 
 %% Keep important functions
 decoder.fsamp = params.fsamp;
@@ -171,6 +214,7 @@ decoder.epochRejection = params.epochRejection;
 if strcmp(params.spatialFilter.type, 'CAR');
     decoder.spatialFilter = filterMatrix;
 end
+decoder.spatialFilter = filterMatrix;
 decoder.resample = params.resample;
 decoder.psd = params.psd;
 decoder.riemann = params.riemann;

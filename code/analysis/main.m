@@ -11,12 +11,10 @@ addpath(genpath('../functions'));
 %% Load EEG dataset %%
 %%%%%%%%%%%%%%%%%%%%%%
 dataPath = [pwd '/../../data/'];
-dataInfo = dir([dataPath '/' subjectID '_20*']);
-data = struct();
-disp(['Loading the data from ' dataInfo.name]);
-[data.calibration, data.validation, data.training, data.decoding] = loadData([dataInfo.folder '/' dataInfo.name '/*']);
+data = loadData(dataPath, subjectID);
 delete sopen.mat
-cfg = setParams(data.training.header);
+
+cfg = setParams(data.training1.header);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load behavioral dataset %%

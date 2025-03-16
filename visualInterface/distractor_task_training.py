@@ -350,24 +350,26 @@ while run:
                 pygame.display.update()
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
-                        trial_end = True
+                        
                         if event.key == pygame.K_ESCAPE:
+                            trial_end = True
                             run = False
-                        else:
-                            if event.key == pygame.K_LEFT:
-                                is_correct = (dot_correct == 0)
-                            elif event.key == pygame.K_RIGHT:
-                                is_correct = (dot_correct == 1)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        trial_end = True
+                        if event.button == 1:
+                            is_correct = (dot_correct == 0)
+                        elif event.button == 3:
+                            is_correct = (dot_correct == 1)
 
-                            response = 1 if is_correct else 2
-                            trigger_code = 11 if is_correct else 12
-                            # if trial_type[trial_index] == 1:
-                            #     trigger_code = 41 if is_correct else 42
-                            # else:
-                            #     trigger_code = 11 if is_correct else 12
-                            
-                            add_trigger(trigger_code)
-                            print(trigger_code)
+                        response = 1 if is_correct else 2
+                        trigger_code = 11 if is_correct else 12
+                        # if trial_type[trial_index] == 1:
+                        #     trigger_code = 41 if is_correct else 42
+                        # else:
+                        #     trigger_code = 11 if is_correct else 12
+                        
+                        add_trigger(trigger_code)
+                        print(trigger_code)
 
         # After the trial ends, clear the screen
         screen.fill((0, 0, 0))

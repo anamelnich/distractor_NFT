@@ -22,7 +22,7 @@
 % set_size=4
 function index = computeIndex(trigger, set_size)
     if set_size == 4
-        [pos, typ] = ismember(trigger, [102 104 100 110]); % 10: no-distractor, 20: distractor
+        [pos, typ] = ismember(trigger, [102 104 100 110]); % 10: no-distractor, 20: distractor removed 110
         index.pos = find(pos); % Get positions of all distractor or no-distractor triggers
         typ_matched = typ(pos);
         index.typ = zeros(size(typ_matched));

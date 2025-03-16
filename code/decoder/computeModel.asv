@@ -10,13 +10,16 @@ addpath(genpath('../functions'));
 %% Load dataset %%
 %%%%%%%%%%%%%%%%%%
 dataPath = [pwd '/../../data/'];
-data = loadData(dataPath, subjectID);
+dataInfo = dir([dataPath '/' subjectID '_20*']);
+data = struct();
+disp(['Loading the data from ' dataInfo.name]);
+[data.calibration, data.validation, data.training, data.decoding] = loadData([dataInfo.folder '/' dataInfo.name '/*']);
 delete sopen.mat
-
+%unique(data.validation.data(:,67))
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
 %%%%%%%%%%%%%%%%%%%%%%%%
-cfg = setParams(data.training1.header);
+cfg = setParams(data.validation.header);
 
 fields = fieldnames(data);
 for i = 1:numel(fields)
@@ -73,7 +76,7 @@ end
 %% Classification %%
 %%%%%%%%%%%%%%%%%%%%
 
-trainingdata = data.training1.epochs;
+trainingdata = data.training.epochs;
 
 n_files = length(trainingdata.eof);
 trainingdata.posteriors = nan(length(trainingdata.labels), 1);
@@ -122,7 +125,6 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 15]);
 
 % Subplot 2: Label = 2
 subplot(4,1,2);
@@ -135,7 +137,6 @@ title('Label = 2');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 15]);
 
 
 % Subplot 3: Label = 0
@@ -149,21 +150,19 @@ title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 30]);
 
 
 % Subplot 3: Label = 0
 subplot(4,1,4);
-histogram(trainingdata.posteriors(trainingdata.newlabels == 1), ...
+histogram(trainingdata.posteriors(trainingdata.labels == 0), ...
     'FaceAlpha', 0.5, ...
-    'FaceColor', 'r', ...
+    'FaceColor', 'b', ...
     'EdgeColor', 'none', ...
     'NumBins', 10);
-title('Label = 1');
+title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 30]);
 
 
 %%

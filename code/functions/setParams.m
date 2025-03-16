@@ -53,7 +53,7 @@ function params = setParams(header)
     %%%%%%%%%%%%%%%%%%%%%
     %% Spectral Filter %%
     %%%%%%%%%%%%%%%%%%%%%
-    params.spectralFilter.freqs = [1 10];  % cut-off frequencies
+    params.spectralFilter.freqs = [1 30];  % cut-off frequencies
     params.spectralFilter.order = 2;  % 2*params.fsamp for FIR filter
     
     params.EOG.spectralFilter.freqs = [1 10];  % cut-off frequencies
@@ -65,7 +65,7 @@ function params = setParams(header)
     params.spatialFilter.type = 'None';  % Option : CAR, Laplace, xDAWN, CCA, CSD, None
     params.spatialFilter.time = round(0.15*params.fsamp)+1:round(0.5*params.fsamp);
     params.spatialFilter.time = params.spatialFilter.time + params.epochOnset;
-    params.spatialFilter.nComp = 4;
+    params.spatialFilter.nComp = 2;
     params.spatialFilter.classes = [1, 2];
 
     %%%%%%%%%%%%%%%%%%%%%%
@@ -93,7 +93,7 @@ function params = setParams(header)
     %% Riemannien Geometry %%
     %%%%%%%%%%%%%%%%%%%%%%%%%
     params.riemann.is_compute = false;
-    params.riemann.time = round(0.2*params.fsamp)+1:round(0.6*params.fsamp);
+    params.riemann.time = round(0.2*params.fsamp)+1:round(0.5*params.fsamp);
     params.riemann.time = params.riemann.time + params.epochOnset;
     params.riemann.type = 'riemann';
     params.riemann.base = [2];
