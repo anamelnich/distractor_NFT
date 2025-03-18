@@ -10,5 +10,9 @@ function dataset = preprocessDataset(dataset, cfg,fname)
     
 
     % Compute index
-    dataset.index = computeIndex(dataset.trigger, 4);
+    if contains(fname, 'eogcalibration')
+        dataset.index = computeIndexEOG(dataset.trigger);
+    else
+        dataset.index = computeIndex(dataset.trigger, 4);
+    end
 end

@@ -1,4 +1,4 @@
-function posterior = singleClassification(decoder, eeg, labels, type, leftElectrodes, rightElectrodes) %singleClassification(decoder, epochs.data(:, :, test_index))
+function [posterior, epoch] = singleClassification(decoder, eeg, labels, type, leftElectrodes, rightElectrodes) %singleClassification(decoder, epochs.data(:, :, test_index))
 rng(1)
 %epochs.posteriors(test_index) = singleClassification(decoder, epochs.data(:, :, test_index), epochs.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 %ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
@@ -35,24 +35,18 @@ elseif type == 1
     baseline_period = [1, first_index];
     baseline = mean(eeg(baseline_period, :, :), 1); % [1 x channels x trials]
     eeg = eeg - baseline;
-   % epochStart = first_index - round(0.5*decoder.fsamp);
-    %eeg = eeg(epochStart:end,:,:);
-    %decoder.resample.time = round(0.1*params.fsamp)+1:round(0.6*params.fsamp); %check if this makes sense to do
-%     sf_eeg = eeg(first_index:end,:,:);
 elseif type == 2
     eeg = eeg;
-%     sf_eeg = eeg;
 end
-% sf_eeg = eeg;
+
 
 %% Select electrodes based on epoch labels
 idx0 = find(labels == 0);
-N0 = length(idx0);
-perm0 = randperm(N0);
-Nleft0 = floor(N0/2);             % Number assigned to left
-Nright0 = N0 - Nleft0;            % Remainder assigned to right
-idxLeft0 = idx0( perm0(1:Nleft0) );
-idxRight0 = idx0( perm0(Nleft0+1:end) );
+perm0 = randperm(length(idx0));
+Nleft0 = floor(length(idx0)/2);
+idxLeft0 = idx0(perm0(1:Nleft0));
+% idxRight0 will be the complement:
+idxRight0 = setdiff(idx0, idxLeft0);
 
 n_samples = size(eeg, 1);
 n_electrodes = length(leftElectrodes); 
@@ -98,10 +92,12 @@ elseif type == 1
     n_trials = 1;
 
     % Select electrode indices based on the label
-    if labels == 102 || labels == 100 || labels == 110 % Distractor on right
+    if labels == 102
         electrodeIndices = leftElectrodes;
     elseif labels == 104 %|| label == 0 % Distractor on left or no distractor
         electrodeIndices = rightElectrodes;
+    % elseif labels == 100 || labels == 110
+    
     else
         error('Unknown label');
     end

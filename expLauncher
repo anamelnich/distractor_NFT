@@ -20,7 +20,7 @@ if [ "$mode" = "c" ]
 
 # Open GDF and log files
 datetime=$(date +%Y%m%d%H%M%S)
-basename=$dir/data/"e"$subID"_"$datetime"_calibration"
+basename=$dir/data/"e"$subID"_"$datetime"_EOGcalibration"
 foldername=$dir/data/"e"$subID"_"$(date +%Y%m%d) 
 gdffilename=$basename".gdf"
 logfilename=$basename".log"
@@ -32,7 +32,7 @@ echo $logfilename
 cl_rpc openxdf $gdffilename $logfilename ""
 
 sleep 3
-python3 ./visualInterface/calibration.py
+python3 ./visualInterface/EOGcalibration.py
 
 # Close the GDF file
 sleep 3

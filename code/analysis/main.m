@@ -1,5 +1,4 @@
-subjectID = 'e12';
-% sessions = {'validation', 'training'};
+subjectID = 'e0';
 
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
@@ -7,6 +6,7 @@ subjectID = 'e12';
 clearvars -except subjectID  sessions plot_flag;
 close all; clc; rng('default');
 addpath(genpath('../functions'));
+figpath = '../../Figures/';
 %%%%%%%%%%%%%%%%%%%%%%
 %% Load EEG dataset %%
 %%%%%%%%%%%%%%%%%%%%%%
@@ -14,18 +14,17 @@ dataPath = [pwd '/../../data/'];
 data = loadData(dataPath, subjectID);
 delete sopen.mat
 
-cfg = setParams(data.training1.header);
+% cfg = setParams(data.training1.header);
+cfg = setParams(data.eogcalibration1.header);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load behavioral dataset %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+behData = loadBehData(dataPath, subjectID);
 
-beh = struct();
-[beh.behtraining, beh.behvalidation, beh.behdecoding] = loadBehData([dataInfo.folder '/' dataInfo.name '/*']);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Behavioral Analysis %%
-%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Behavioral Analysis - Distractor Task%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 behfields = fieldnames(beh);
 for i = 1:numel(behfields)
@@ -55,12 +54,45 @@ for i = 1:numel(behfields)
 
 end
 
-figpath = '../../Figures/';
 behfields = fieldnames(beh);
 for i = 1:numel(behfields)
     fname = behfields{i};
     plotBehavior(beh.(fname),cfg,[subjectID ' ' fname],figpath);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Behavioral Analysis - Stroop Task%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+behfields = fieldnames(behData);
+for i = 1:numel(behfields)
+    fname = behfields{i};
+    if isempty(behData.(fname).Trial)
+        beh = rmfield(beh, fname);
+        continue;
+    end
+    loc = behData.(fname);
+    loc.RTn = loc.Reaction_Time(loc.trial_type==0); %neutral
+    loc.RTn_mean = mean(loc.RTn);
+    loc.RTn_std = std(loc.RTn);
+    loc.RTc = loc.Reaction_Time(loc.trial_type==1); %congruent
+    loc.RTc_mean = mean(loc.RTc);
+    loc.RTc_std = std(loc.RTc);
+    loc.RTi = loc.Reaction_Time(loc.trial_type==2); %incongruent
+    loc.RTi_mean = mean(loc.RTi);
+    loc.RTi_std = std(loc.RTi);
+    
+    behData.(fname) = loc;
+
+end
+
+
+behfields = fieldnames(behData);
+for i = 1:numel(behfields)
+    fname = behfields{i};
+    plotStroopBeh(behData.(fname),[subjectID ' ' fname],figpath);
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
@@ -109,6 +141,19 @@ for i = 1:numel(fields)
     data.(fname).EOG(:,:) = filtfilt(b,a,data.(fname).EOG(:,:));
 end
 
+%%%%%%%%%%%%%%%%%%%%
+%% EOG Regression %%                   
+%%%%%%%%%%%%%%%%%%%%
+% for i = 1:numel(fields)
+%     fname = fields{i};
+%     if contains(fname, 'eogcalibration')
+%         eogFilter = filterEOG(data.(fname).data, data.fname.EOG);
+%         cfg.eogFilter = eogFilter;
+% 
+%     end
+% end 
+% 
+% training.data(:, cfg.eegChannels) = training.data(:, cfg.eegChannels) - training.data(:, cfg.eogChannels) * cfg.eogFilter;
 %%%%%%%%%%%%%%%%%%%%%
 %% %%%% ICA %%%%%%%%%                   
 %%%%%%%%%%%%%%%%%%%%%
@@ -167,7 +212,13 @@ end
 
 for i = 1:numel(fields)
     fname = fields{i};
-    plotEOG(data.(fname).epochs.EOG, data.(fname).epochs.labels, cfg, [subjectID ' ' fname], figpath)
+    if contains(fname, 'stroop')
+        continue;
+    elseif contains(fname, 'eogcalibration')
+        data.(fname).EOGmVtoDegree = convertEOGtoAngles(data.(fname).epochs.EOG, data.(fname).epochs.labels, cfg, [subjectID ' ' fname], figpath)
+    else
+        plotEOG(data.(fname).epochs.EOG, data.(fname).epochs.labels, cfg, [subjectID ' ' fname], figpath)
+    end
 end
 
 %%%%%%%%%%%%%%%

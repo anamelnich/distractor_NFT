@@ -72,48 +72,47 @@ end
 %%%%%%%%%%%%%%%%%%%%
 %% Classification %%
 %%%%%%%%%%%%%%%%%%%%
+epochsForTrain = {data.training1.epochs};
+trainingData = combineEpochs(epochsForTrain);
 
-trainingdata = data.training1.epochs;
-
-n_files = length(trainingdata.eof);
-trainingdata.posteriors = nan(length(trainingdata.labels), 1);
-trainingdata.posteriorstrain = nan(length(trainingdata.labels), 1);
+n_files = length(trainingData.eof);
+trainingData.posteriors = nan(length(trainingData.labels), 1);
+trainingData.posteriorstrain = nan(length(trainingData.labels), 1);
 for i_file = 1:n_files
-    train_index = trainingdata.file_id ~= i_file; 
-    test_index = trainingdata.file_id == i_file;
-    decoder = computeDecoder(trainingdata.data(:, :, train_index), trainingdata.labels(train_index), cfg);
-    trainingdata.posteriorstrain(train_index) = singleClassification(decoder, trainingdata.data(:, :, train_index), trainingdata.labels(train_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
-    trainingdata.posteriors(test_index) = singleClassification(decoder, trainingdata.data(:, :, test_index), trainingdata.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+    train_index = trainingData.file_id ~= i_file; 
+    test_index = trainingData.file_id == i_file;
+    decoder = computeDecoderNew(trainingData.data(:, :, train_index), trainingData.labels(train_index), cfg);
+    trainingData.posteriors(test_index) = singleClassificationNew(decoder, trainingData.data(:, :, test_index), trainingData.labels(test_index),0,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 end
 
 
 
 %%
-trainingdata.newlabels = trainingdata.labels;
-trainingdata.newlabels(trainingdata.labels == 2) = 1;
+trainingData.newlabels = trainingData.labels;
+trainingData.newlabels(trainingData.labels == 2) = 1;
 disp('== Synchronous Classification == ');
-[x, y, t, auc, opt] = perfcurve(~trainingdata.newlabels,1-trainingdata.posteriors, 1, 'Prior', 'uniform');
-% [x, y, t, auc, opt] = perfcurve(trainingdata.newlabels,trainingdata.posteriors, 1, 'Prior', 'uniform');
+[x, y, t, auc, opt] = perfcurve(~trainingData.newlabels,1-trainingData.posteriors, 1, 'Prior', 'uniform');
+% [x, y, t, auc, opt] = perfcurve(trainingData.newlabels,trainingData.posteriors, 1, 'Prior', 'uniform');
 % threshold = 0.42;
 threshold = t(x == opt(1) & y == opt(2));
 disp(['AUC score : ' num2str(auc, '%.2f') ' Threshold: ' num2str(threshold, '%.2f')]);
 disp('Confusion Matrix: ');
-cm = confusionmat(logical(trainingdata.newlabels), (trainingdata.posteriors >= threshold));
+cmCV = confusionmat(logical(trainingData.newlabels), (trainingData.posteriors >= threshold));
 disp('Confusion Matrix (with labels):')
 disp('--------------------------------')
 disp('            Pred=0    Pred=1')
-fprintf('True=0:       %3d       %3d\n', cm(1,1), cm(1,2));
-fprintf('True=1:       %3d       %3d\n', cm(2,1), cm(2,2));
-tnr = cm(1,1) / sum(cm(1, :));
-tpr = cm(2,2) / sum(cm(2, :));
-accuracy = (cm(1,1) + cm(2,2)) / sum(cm(:));
+fprintf('True=0:       %3d       %3d\n', cmCV(1,1), cmCV(1,2));
+fprintf('True=1:       %3d       %3d\n', cmCV(2,1), cmCV(2,2));
+tnr = cmCV(1,1) / sum(cmCV(1, :));
+tpr = cmCV(2,2) / sum(cmCV(2, :));
+accuracy = (cmCV(1,1) + cmCV(2,2)) / sum(cmCV(:));
 disp(['TNR: ' num2str(tnr, '%.2f') ' TPR: ' num2str(tpr, '%.2f') ' Accuracy: ' num2str(accuracy, '%.2f')]);
 %%
 figure;
 
 % Subplot 1: Label = 1
 subplot(4,1,1);
-histogram(trainingdata.posteriors(trainingdata.labels == 1), ...
+histogram(trainingData.posteriors(trainingData.labels == 1), ...
     'FaceAlpha', 0.5, ...
     'FaceColor', 'r', ...
     'EdgeColor', 'none', ...
@@ -126,7 +125,7 @@ ylim([0 15]);
 
 % Subplot 2: Label = 2
 subplot(4,1,2);
-histogram(trainingdata.posteriors(trainingdata.labels == 2), ...
+histogram(trainingData.posteriors(trainingData.labels == 2), ...
     'FaceAlpha', 0.5, ...
     'FaceColor', 'g', ...
     'EdgeColor', 'none', ...
@@ -140,7 +139,7 @@ ylim([0 15]);
 
 % Subplot 3: Label = 0
 subplot(4,1,3);
-histogram(trainingdata.posteriors(trainingdata.labels == 0), ...
+histogram(trainingData.posteriors(trainingData.labels == 0), ...
     'FaceAlpha', 0.5, ...
     'FaceColor', 'b', ...
     'EdgeColor', 'none', ...
@@ -154,7 +153,7 @@ ylim([0 30]);
 
 % Subplot 3: Label = 0
 subplot(4,1,4);
-histogram(trainingdata.posteriors(trainingdata.newlabels == 1), ...
+histogram(trainingData.posteriors(trainingData.newlabels == 1), ...
     'FaceAlpha', 0.5, ...
     'FaceColor', 'r', ...
     'EdgeColor', 'none', ...
@@ -167,15 +166,14 @@ ylim([0 30]);
 
 
 %%
-% figure;
-% histogram(epochs.posteriors(epochs.labels == 0),'FaceColor', 'green'); hold on;
-% histogram(epochs.posteriors(epochs.labels == 1),'FaceColor','red'); hold on;
-% histogram(epochs.posteriors(epochs.labels == 2),'FaceColor','blue');
-% legend('no distractor','distractor rigt','distractorleft')
-% threshold = 0.5 ;
-%%
-decoder = computeDecoder(trainingdata.data, trainingdata.labels, cfg);
-trainingdata.posteriors = singleClassification(decoder, trainingdata.data, trainingdata.labels, 0, decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+[decoder,modeloutput] = computeDecoderNew(trainingData.data, trainingData.labels, cfg);
+[trainingData.posteriors, classoutput] = singleClassificationNew(decoder, trainingData.data, trainingData.labels, 0, decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+if isequal(modeloutput, classoutput)
+    disp('Preprocessing is the same.');
+else
+    disp('Preprocessing is NOT the same.');
+end
+cm = confusionmat(logical(trainingData.newlabels), (trainingData.posteriors >= threshold));
 %%
 decoder.decision_threshold = threshold;
 decoder.eegChannels = cfg.eegChannels; 
@@ -191,11 +189,19 @@ decoder.riemann.time = decoder.riemann.time - decoder.epochOnset;
 decoder.asynchronous.threshold = 0.8;
 decoder.asynchronous.filterLength = 1;
 
+decoder.cmCV = cmCV;
+decoder.accCV = accuracy;
+decoder.tnrCV = tnr;
+decoder.tprCV = tpr;
+decoder.cm = cm;
+decoder.NDside = [];
+decoder.onlinePosteriors = [];
 decoder.subjectID = subjectID;
 decoder.datetime = datetime;
 disp(' ');
 disp('Decoder Updated at');
 disp(decoder.datetime);
-    
+
+save(sprintf('./decoders/%s_decoder.mat', subjectID), 'decoder');
 save('../cnbiLoop/decoder.mat', 'decoder');
 %end

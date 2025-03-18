@@ -54,11 +54,13 @@ try
                     label_value = stream.trigger(first_index);
                     fprintf('Label value at first_index (%d): %d\n', first_index, label_value);
     
-                    ex_posterior = singleClassification(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
+                    [ex_posterior, ~, NDside] = singleClassificationNew(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
                     %stream.eeg is 768 x 68, first_index = 154, label_value
                     %110
                     % eeg will rougly be 728x64
                     disp(['Time Frame: ' num2str(time_frame, '%.2f') ' Posteriors: ' num2str(ex_posterior, ' %.2f')]);
+                    decoder.NDside = [decoder.NDside, NDside];
+                    decoder.onlinePosteriors = [decoder.onlinePosteriors, ex_posterior];
                     stream.trigger(first_index) = 0;
                     sendTiD(1 + (ex_posterior > decoder.decision_threshold)); % sends 1 if below threshold, 2 if above
                 end
@@ -69,6 +71,10 @@ try
             end
         end
     end
+folderPath = 'online_decoders';
+timestamp = datestr(now, 'yyyymmdd_HHMMSS');
+filename = fullfile(folderPath,['decoder_' timestamp '.mat']);
+save(filename, 'decoder');
 
 catch exception
     ndf_printexception(exception);

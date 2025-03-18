@@ -12,6 +12,11 @@ from cnbiloop import BCI_tid ##############new
 import threading
 import subprocess
 
+
+thumb_up = pygame.image.load("./thumb_up.png").convert_alpha()
+thumb_down = pygame.image.load("./thumb_down.png").convert_alpha()
+big_font = pygame.font.Font(None, 72) 
+small_font = pygame.font.Font(None, 36)
 ########################functions########################
 def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
     radians = math.radians(degrees)
@@ -260,6 +265,12 @@ for i in range(n_trials):
 correct_detected = False
 error_detected = False
 feedback_mode = False
+cmTP = 0
+cmTN = 0
+cmFP = 0
+cmFN = 0
+icon = None
+score=0
 # Initialize running flag for the listener thread
 listener_running = [True]
 
@@ -395,34 +406,54 @@ while run:
         if correct_detected:
             Pd_class = 1
             if trial_type[trial_index]==1:
-                response_text = 'Success, Pd detected'
-               
+                response_text = 'Score +2'
                 response_color = (0,255,0)
+                icon = thumb_up
+                cmTP+=1
+                score+=2
             elif trial_type[trial_index]==0:
-                response_text = 'Fail, Pd detected'
+                response_text = 'Score -1'
                 response_color = (255,0,0)
+                icon = thumb_down
+                cmFP+=1
+                score-=1
             correct_detected = False
         elif error_detected:
             Pd_class = 0
             if trial_type[trial_index]==1:
-                response_text = 'Fail, Pd not detected'
+                response_text = 'Score -2'
                 response_color = (255,0,0)
+                icon = thumb_down
+                cmFN+=1
+                score-=2
             elif trial_type[trial_index]==0:
-                response_text = 'Success, Pd not detected'
+                response_text = 'Score +1'
                 response_color = (0,255,0)
+                icon = thumb_up
+                cmTN+=1
+                score+=1
             error_detected = False
         else:
             Pd_class = 3
-            response_text = 'No Response Received'
-            response_color = (255,255,255)
+            # response_text = 'No Response Received'
+            # response_color = (255,255,255)
         
         
-        text = font.render(response_text, False, response_color)
+        # text = font.render(response_text, False, response_color)
+        # textRect = text.get_rect()
+        # textRect.center = (x_center, y_center)
+        # screen.blit(text, textRect)
+        if icon is not None:
+            icon_rect = icon.get_rect()
+            icon_rect.center = (x_center, y_center)
+            screen.blit(icon, icon_rect)
+        text = font.render(response_text, True, response_color)
         textRect = text.get_rect()
-        textRect.center = (x_center, y_center)
+        textRect.midtop = (x_center, icon_rect.bottom + 10)
         screen.blit(text, textRect)
         pygame.display.update()
         pygame.time.delay(1000)
+        icon=None
         responses.append(response)
 
         text_to_save += f"Trial {trial_index + 1} - Task: {trial_type[trial_index]} - Feedback: {response}\n"
@@ -435,9 +466,13 @@ while run:
         incorrect_response = responses.count(2)/n_trials
         timeout_response = responses.count(3)/n_trials
         screen.fill((0, 0, 0))
-        text = font.render(f'Correct: {correct_responses}    Incorrect: {incorrect_response}     Timeout: {timeout_response}', False, (225, 225, 225))
+        score_text = big_font.render(f'Score: {score}', True, (255, 255, 255))
+        score_rect = score_text.get_rect(center=(x_center, y_center))
+        screen.blit(score_text, score_rect)
+        text = font.render(f'Correct: {correct_responses}    Incorrect: {incorrect_response}     Timeout: {timeout_response}', True, (225, 225, 225))
         textRect = text.get_rect()
-        textRect.center = (x_center, y_center)
+        textRect.centerx = x_center
+        textRect.top = score_rect.bottom + 10
         screen.blit(text, textRect)
         pygame.display.update()
         waiting_for_key = True
@@ -447,6 +482,24 @@ while run:
                     waiting_for_key = False
         send_tid(20)
         run = False  # End the loop after all trials are completed
+
+total = cmTP + cmFP + cmFN + cmTN
+
+print("Confusion Matrix:")
+print("              Predicted")
+print("             0        1")
+print(f"Actual 0:   {cmTN:6d}   {cmFP:6d}")
+print(f"Actual 1:   {cmFN:6d}   {cmTP:6d}")
+
+# Calculate Accuracy, TPR, and TNR
+accuracy = 100 * (cmTP + cmTN) / total if total > 0 else 0
+TPR = 100 * cmTP / (cmTP + cmFN) if (cmTP + cmFN) > 0 else 0
+TNR = 100 * cmTN / (cmTN + cmFP) if (cmTN + cmFP) > 0 else 0
+
+print(f"Accuracy: {accuracy:.2f}%")
+print(f"True Positive Rate (Sensitivity): {TPR:.2f}%")
+print(f"True Negative Rate (Specificity): {TNR:.2f}%")
+
 
 basename = sys.argv[1] #file name and path from expLauncher
 # Save the collected trial data to a text file with a timestamp

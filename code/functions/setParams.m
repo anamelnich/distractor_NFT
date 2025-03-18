@@ -68,6 +68,12 @@ function params = setParams(header)
     params.spatialFilter.nComp = 2;
     params.spatialFilter.classes = [1, 2];
 
+    %%%%%%%%%%%%%%
+    %% Features %%
+    %%%%%%%%%%%%%%
+    params.features.erp_iscompute = true;
+    params.features.diffwave_iscompute = true;
+
     %%%%%%%%%%%%%%%%%%%%%%
     %% Resampling Ratio %%
     %%%%%%%%%%%%%%%%%%%%%%
@@ -103,7 +109,7 @@ function params = setParams(header)
     %% Classifier %%
     %%%%%%%%%%%%%%%%
     params.classify.is_normalize = true;
-    params.classify.reduction.type = 'none'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
+    params.classify.reduction.type = 'lasso'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
     params.classify.type = 'linear'; % {'SVM', 'LinearSVM', 'LDA', 'diagLDA', 'diagQuadratic', 'SLR_VAR', 'L1_SLR'}
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

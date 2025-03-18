@@ -1,4 +1,4 @@
-function decoder = computeDecoder(trainEpochs, trainLabels, params)
+function [decoder, classifierEpochs] = computeDecoder(trainEpochs, trainLabels, params)
 %%
 rng(1)
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,10 +19,10 @@ rng(1)
 %%%%%%%%%%%%%%%%%%%%
 %% Spatial Filter %%
 %%%%%%%%%%%%%%%%%%%%
-if strcmp(params.spatialFilter.type, 'CAR');
-    filterMatrix = get_spatial_filter('CAR', trainEpochs,trainLabels,params);
-    trainEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
-end
+% if strcmp(params.spatialFilter.type, 'CAR');
+%     filterMatrix = get_spatial_filter('CAR', trainEpochs,trainLabels,params);
+%     trainEpochs = apply_spatialFilter(trainEpochs, filterMatrix);
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Baseline correction %%%%%%%%%%%%%
@@ -49,12 +49,11 @@ n_electrodes = length(LeftElectrodes);
 selectedEpochs = nan(n_samples, n_electrodes, n_trials);
 
 idx0 = find(trainLabels == 0);
-N0 = length(idx0);
-perm0 = randperm(N0);
-Nleft0 = floor(N0/2);             % Number assigned to left
-Nright0 = N0 - Nleft0;            % Remainder assigned to right
-idxLeft0 = idx0( perm0(1:Nleft0) );
-idxRight0 = idx0( perm0(Nleft0+1:end) );
+perm0 = randperm(length(idx0));
+Nleft0 = floor(length(idx0)/2);
+idxLeft0 = idx0(perm0(1:Nleft0));
+% idxRight0 will be the complement:
+idxRight0 = setdiff(idx0, idxLeft0);
 
 for i_trial = 1:n_trials
     label = trainLabels(i_trial);

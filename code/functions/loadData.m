@@ -1,4 +1,4 @@
-function data = loadDataScalable(dataPath, subjectID)
+function data = loadData(dataPath, subjectID)
 % loadDataScalable loads EEG recordings from multiple day folders.
 %
 % Assumptions:

@@ -8,8 +8,8 @@ from python_client import Trigger
 # fixation 6
 # dot top 100
 # dot right 101
-# dot right 102
-# dot right 103
+# dot bottom 102
+# dot left 103
 
 def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
     radians = math.radians(degrees)
