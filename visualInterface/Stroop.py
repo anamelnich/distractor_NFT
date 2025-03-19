@@ -10,7 +10,7 @@ import queue
 import os 
 from datetime import datetime 
 import heapq
-# from python_client import Trigger
+from python_client import Trigger
 
 #Part 1 evaluates reading ability
 #Part 2 provides baseline for RT analysis
@@ -39,8 +39,8 @@ audio_queue = queue.Queue()
 try:
     model = Model("./vosk/vosk-model-small-en-us-0.15")
 
-    vocabulary = '["red", "green", "blue", "yellow"]'
-    recognizer = KaldiRecognizer(model, SAMPLE_RATE, vocabulary)
+    # vocabulary = '["red", "green", "blue", "yellow"]'
+    # recognizer = KaldiRecognizer(model, SAMPLE_RATE, vocabulary)
 
 except Exception as e:
     print("Error initializing Vosk model:", e)
@@ -62,9 +62,9 @@ class StroopTask:
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.basename = sys.argv[1]
         self.log_filename = f"{self.basename}.behoutput.txt"
-        self.parallel = Trigger('ARDUINO')
+        self.parallel = Trigger('USB2LPT')
         self.parallel.init(50)
-
+        self.model = model
             
     def generate_part1_trials(self):
         trials = []
@@ -210,8 +210,9 @@ class StroopTask:
         pygame.display.flip()
         
     def run_trial(self, stimulus, is_circle=False, ink_color=None, trial_type=None):
-        print(f"\n--- Starting trial: type: {trial_type}, stimulus: {stimulus}, ink_color: {ink_color}, is_circle: {is_circle} ---")
-        
+
+        recognizer = KaldiRecognizer(self.model, SAMPLE_RATE, '["red", "green", "blue", "yellow"]')
+        recognizer.SetWords(True)
 
         self.display_fixation()
         self.parallel.signal(6)
@@ -258,7 +259,7 @@ class StroopTask:
                 recognized_text = "RED"
             if "result" in result and len(result["result"]) > 0:
                 first_word = result["result"][0]
-                reaction_time = (first_word["start"] - stimulus_time) * 1000
+                reaction_time = first_word["start"] * 1000
             else:
                 reaction_time = None
             attempts.append((recognized_text, reaction_time))
@@ -321,7 +322,7 @@ class StroopTask:
                         f"{trial['response']}\t"
                         f"{rt}\n")
                         
-        print(f"\nData saved to {filename}")
+
         
     def run_part(self, part):
         # Clear previous trials data

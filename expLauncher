@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo modprobe -r lp
-#sudo chmod 777 /dev/parport0
+sudo chmod 777 /dev/parport0
 sudo chmod 777 /dev/ttyACM0
 read -p "subjectID: " subID
 read -p "[c] calibration, [v] validation, [t] training or [d] decoding or [s] stroop? " mode
@@ -32,7 +32,7 @@ echo $logfilename
 cl_rpc openxdf $gdffilename $logfilename ""
 
 sleep 3
-python3 ./visualInterface/EOGcalibration.py
+python3 ./visualInterface/EOGcalibration.py "$basename"
 
 # Close the GDF file
 sleep 3
@@ -151,7 +151,7 @@ mv $basename $foldername
 
 #########################################################################
 
-if [ "$mode" = "s" ]
+elif [ "$mode" = "s" ]
 	then
  	echo "
 ----------------------------------

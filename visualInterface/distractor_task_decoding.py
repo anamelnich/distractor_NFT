@@ -13,10 +13,7 @@ import threading
 import subprocess
 
 
-thumb_up = pygame.image.load("./thumb_up.png").convert_alpha()
-thumb_down = pygame.image.load("./thumb_down.png").convert_alpha()
-big_font = pygame.font.Font(None, 72) 
-small_font = pygame.font.Font(None, 36)
+
 ########################functions########################
 def degrees_to_pixels(degrees, viewing_distance_cm, pixels_per_cm):
     radians = math.radians(degrees)
@@ -137,7 +134,7 @@ text_to_analyze = ""
 # args = ["cl_rpc", "openxdf", gdf_file, log_file, "\"\""]
 # subprocess.run(args) 
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('ARDUINO')
+HWTrigger = Trigger('USB2LPT')
 HWTrigger.init(50)
 bci = BCI_tid.BciInterface() 
 trial_index = 0
@@ -155,6 +152,8 @@ screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
 pygame.display.set_caption("D Task")
 screen_width_px, screen_height_px = 1920, 1080
 
+thumb_up = pygame.image.load("./img/thumb_up.png").convert_alpha()
+thumb_down = pygame.image.load("./img/thumb_down.png").convert_alpha()
 screen_width_cm = 30.5  # in cm
 screen_height_cm = 18.0 
 viewing_distance_cm = 60.0
@@ -261,7 +260,8 @@ for i in range(n_trials):
     shape_positions.append(shape_positions_trial)
 
 
-
+big_font = pygame.font.Font(None, 72) 
+small_font = pygame.font.Font(None, 36)
 correct_detected = False
 error_detected = False
 feedback_mode = False

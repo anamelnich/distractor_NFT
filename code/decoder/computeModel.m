@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e12'
+subjectID='e13'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -16,7 +16,7 @@ delete sopen.mat
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
 %%%%%%%%%%%%%%%%%%%%%%%%
-cfg = setParams(data.training1.header);
+cfg = setParams(data.eogcalibration1.header);
 
 fields = fieldnames(data);
 for i = 1:numel(fields)

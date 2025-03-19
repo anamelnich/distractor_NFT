@@ -71,7 +71,7 @@ try
             end
         end
     end
-folderPath = 'online_decoders';
+folderPath = './../online_decoders';
 timestamp = datestr(now, 'yyyymmdd_HHMMSS');
 filename = fullfile(folderPath,['decoder_' timestamp '.mat']);
 save(filename, 'decoder');

@@ -27,7 +27,7 @@ def add_trigger(code):
     if code != None:
         HWTrigger.signal(code)
 
-HWTrigger = Trigger('ARDUINO')
+HWTrigger = Trigger('USB2LPT')
 HWTrigger.init(50)
 trigger=[]
 

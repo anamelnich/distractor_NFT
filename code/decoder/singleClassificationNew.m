@@ -1,5 +1,8 @@
 function [posterior, epoch, NDside] = singleClassificationNew(decoder, eeg, labels, type, leftElectrodes, rightElectrodes)
-% singleClassification applies the same preprocessing steps as computeDecoder
+%singleClassificationNew(decoder, rand(signalLength, length(decoder.eegChannels)), dummy_label, dummy_type, decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+ 
+
+%singleClassification applies the same preprocessing steps as computeDecoder
 % to test data and returns the posterior probability for the trial(s),
 % along with the final feature vector(s) (epoch).
 %
@@ -119,7 +122,7 @@ elseif type == 2
     % For type 2, assume we only use ERP from right electrodes.
     n_samples = size(eeg, 1);
     selectedEpochsERP = eeg(:, rightElectrodes);
-    selectedEpochsDiff = [];  % Not computed in this mode.
+    selectedEpochsDiff = eeg(:, rightElectrodes);
     n_trials = 1;
 end
 
@@ -127,12 +130,12 @@ end
 % Use the same helper function (processFeatures) as in computeDecoder.
 % This function applies spatial filtering (e.g., using CCA), resampling, PSD/riemann, etc.
 if decoder.features.erp_iscompute
-    ERP_features = processFeatures(selectedEpochsERP, decoder, decoder.spatialFilter.erp,first_index);
+    ERP_features = processFeatures(selectedEpochsERP, decoder, decoder.spatialFilter.erp,type,first_index);
 else
     ERP_features = [];
 end
 if decoder.features.diffwave_iscompute
-    diff_features = processFeatures(selectedEpochsDiff, decoder, decoder.spatialFilter.diff,first_index);
+    diff_features = processFeatures(selectedEpochsDiff, decoder, decoder.spatialFilter.diff,type,first_index);
 else
     diff_features = [];
 end

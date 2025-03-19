@@ -74,7 +74,7 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M")
 text_to_save = ""
 text_to_analyze = ""
 # ##### This part initialize triggers list of hardware triggers to send to the amplifier #####
-HWTrigger = Trigger('ARDUINO')
+HWTrigger = Trigger('USB2LPT')
 HWTrigger.init(50)
 # bci = BCI_tid.BciInterface() 
 trial_index = 0
@@ -350,7 +350,7 @@ while run:
         textRect.center = (x_center, y_center)
         screen.blit(text, textRect)
         pygame.display.update()
-        pygame.time.delay(1000)
+        pygame.time.delay(500)
         responses.append(response)
 
         text_to_save += f"Trial {trial_index + 1} - Task: {trial_type[trial_index]} - Feedback: {response}\n"

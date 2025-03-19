@@ -14,9 +14,9 @@ stream.flags.initFilter = true;
 max_sample = 1.5*stream.fsamp;
 
 dummy_type = 2;
-dummy_label = [202];
+dummy_label = [102];
 
 signalLength = ceil(max_sample/stream.frame_size)*stream.frame_size;
-singleClassification(decoder, rand(signalLength, length(decoder.eegChannels)), dummy_label, dummy_type, decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
+singleClassificationNew(decoder, rand(signalLength, length(decoder.eegChannels)), dummy_label, dummy_type, decoder.leftElectrodeIndices,decoder.rightElectrodeIndices);
 stream.eeg = nan(signalLength, stream.num_channels);
 stream.trigger = nan(signalLength, 1);
