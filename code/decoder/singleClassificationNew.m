@@ -28,7 +28,7 @@ function [posterior, epoch, NDside] = singleClassificationNew(decoder, eeg, labe
 %   posterior     - posterior probability computed by the classifier.
 %   epoch         - final feature vector(s) used by the classifier.
 
-rng(1)  % Ensure reproducible random choices
+% rng(4)  % Ensure reproducible random choices
 
 %% (Optional) Remove unwanted channels for type==1 or type==2
 if type == 1 || type == 2
@@ -53,7 +53,7 @@ end
 
 %% ROI Selection & Difference Wave Computation
 % (We compute both ERP and diff wave epochs.)
-NDside=100
+NDside=100;
 if type == 0
     % Offline multi-trial: eeg is 3D.
     n_trials = size(eeg, 3);
@@ -78,7 +78,8 @@ if type == 0
             electrodeIndicesERP = rightElectrodes;
             diff_trial = eeg(:, rightElectrodes, i_trial) - eeg(:, leftElectrodes, i_trial);
         elseif lab == 0
-            if ismember(i_trial, idxLeft0)
+            if rand < 0.5
+            % if ismember(i_trial, idxLeft0)
                 electrodeIndicesERP = leftElectrodes;
                 diff_trial = eeg(:, leftElectrodes, i_trial) - eeg(:, rightElectrodes, i_trial);
             else

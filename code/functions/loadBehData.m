@@ -65,6 +65,7 @@ for d = 1:length(dayFolders)
         
         % Load behavioral session using appropriate logic.
         behSession = loadBehSession(subFolderPath, taskType);
+        disp(taskType)
         if isempty(behSession)
             continue;
         end
@@ -156,7 +157,7 @@ if strcmp(taskType, 'stroop')
     end
     behSession.trial_type = new_trial_type;
     % Optionally, you can rename or remove other fields if needed.
-    
+ 
 else
     % For training, decoding, or validation:
     analysisFile = fullfile(folder, [sessionName, '.analysis.txt']);
@@ -177,6 +178,7 @@ else
     triggerData = readmatrix(triggersFile);
     % Remove rows with unwanted trigger values (e.g., 6)
     triggerData(triggerData(:,2) == 6, :) = [];
+
     
     % Define field names for standard behavioral variables.
     beh_vars = {'trial', 'trial_type', 'response', 'tpos', 'dpos', 'dot'};
@@ -186,8 +188,14 @@ else
     end
     behSession.runNumber = [];  % Can be set later
     % Compute reaction times (RT) based on trigger events.
-    trialStarts = triggerData(1:2:end, :); % assume trial start events are in odd rows
-    responses = triggerData(2:2:end, :);   % responses in even rows
+    if strcmp(taskType, 'decoding')  
+        trialStarts = triggerData(triggerData(:,2)>50, :);
+        %trialStarts = triggerData(1:3:end, :); % assume trial start events are in odd rows
+        responses = triggerData(2:3:end, :);   % responses in even rows
+    else
+        trialStarts = triggerData(triggerData(:,2)>50, :); % assume trial start events are in odd rows
+        responses = triggerData(2:2:end, :);   % responses in even rows
+    end 
     RT = responses(:,3) - trialStarts(:,3);
     behSession.RT = RT;
 end

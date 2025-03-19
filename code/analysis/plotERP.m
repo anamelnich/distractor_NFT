@@ -36,7 +36,7 @@ function plotERP(data, params, titleName,path)
     ylabel('Amplitude (\muV)');
     xline(0);
     yline(0);
-    ylim([-10 10]);
+    ylim([-15 15]);
     xticks([0 0.3 0.5 1]);
     legend('distractor', 'no distractor');
     title([titleName, ' - Distractor vs No Distractor']);

@@ -121,7 +121,7 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 15]);
+ylim([0 25]);
 
 % Subplot 2: Label = 2
 subplot(4,1,2);
@@ -134,7 +134,7 @@ title('Label = 2');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 15]);
+ylim([0 25]);
 
 
 % Subplot 3: Label = 0
@@ -148,7 +148,7 @@ title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 30]);
+ylim([0 50]);
 
 
 % Subplot 3: Label = 0
@@ -162,7 +162,7 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 30]);
+ylim([0 50]);
 
 
 %%

@@ -1,6 +1,6 @@
 function [decoder, classifierEpochs] = computeDecoderNew(trainEpochs, trainLabels, params)
 %%
-rng(1)
+% rng(1)
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Artifact Rejection %%
@@ -39,6 +39,8 @@ trainEpochs = trainEpochs - baseline;
 %%%%%%%%%%%%%%%%%%%
 LeftElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3', 'PO5', 'PO7'};
 RightElectrodes = {'P2', 'P4', 'P6', 'P8', 'PO4', 'PO6', 'PO8'};
+% LeftElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3', 'PO5', 'PO7','P2', 'P4', 'P6', 'P8', 'PO4', 'PO6', 'PO8'};
+% RightElectrodes = {'P1', 'P3', 'P5', 'P7', 'PO3', 'PO5', 'PO7','P2', 'P4', 'P6', 'P8', 'PO4', 'PO6', 'PO8'};
 leftElectrodeIndices = find(ismember(params.chanLabels, LeftElectrodes));
 rightElectrodeIndices = find(ismember(params.chanLabels, RightElectrodes));
 
@@ -68,7 +70,8 @@ for i_trial = 1:n_trials
     elseif label == 2
         electrodeIndicesERP = rightElectrodeIndices;
     elseif label == 0
-        if ismember(i_trial, idxLeft0)
+        if rand < 0.5
+        % if ismember(i_trial, idxLeft0)
             electrodeIndicesERP = leftElectrodeIndices;
         else
             electrodeIndicesERP = rightElectrodeIndices;
@@ -85,7 +88,8 @@ for i_trial = 1:n_trials
     elseif label == 2
         diff_trial = trainEpochs(:, rightElectrodeIndices, i_trial) - trainEpochs(:, leftElectrodeIndices, i_trial);
     elseif label == 0
-        if ismember(i_trial, idxLeft0)
+        if rand < 0.5
+        % if ismember(i_trial, idxLeft0)
             diff_trial = trainEpochs(:, leftElectrodeIndices, i_trial) - trainEpochs(:, rightElectrodeIndices, i_trial);
         else
             diff_trial = trainEpochs(:, rightElectrodeIndices, i_trial) - trainEpochs(:, leftElectrodeIndices, i_trial);

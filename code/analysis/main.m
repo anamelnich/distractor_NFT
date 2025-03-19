@@ -1,4 +1,4 @@
-subjectID = 'e0';
+subjectID = 'e13';
 
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
@@ -26,71 +26,59 @@ behData = loadBehData(dataPath, subjectID);
 %% Behavioral Analysis - Distractor Task%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-behfields = fieldnames(beh);
-for i = 1:numel(behfields)
-    fname = behfields{i};
-    if isempty(beh.(fname).trial)
-        beh = rmfield(beh, fname);
-        continue;
-    end
-    loc = beh.(fname);
-    loc.RTd = loc.RT(loc.trial_type==1);
-    loc.RTd_mean = mean(loc.RTd);
-    loc.RTd_std = std(loc.RTd);
-    
-    loc.RTd_correct = loc.RT(loc.trial_type==1 & loc.response == 1);
-    loc.RTd_mean_corr = mean(loc.RTd_correct);
-    loc.RTd_std_corr = std(loc.RTd_correct);
-    
-    loc.RTnd = loc.RT(loc.trial_type==0);
-    loc.RTnd_mean = mean(loc.RTnd);
-    loc.RTnd_std = std(loc.RTnd);
-    
-    loc.RTnd_correct = loc.RT(loc.trial_type==0 & loc.response == 1);
-    loc.RTnd_mean_corr = mean(loc.RTnd_correct);
-    loc.RTnd_std_corr = std(loc.RTnd_correct);
-    
-    beh.(fname) = loc;
-
-end
-
-behfields = fieldnames(beh);
-for i = 1:numel(behfields)
-    fname = behfields{i};
-    plotBehavior(beh.(fname),cfg,[subjectID ' ' fname],figpath);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Behavioral Analysis - Stroop Task%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 behfields = fieldnames(behData);
 for i = 1:numel(behfields)
     fname = behfields{i};
-    if isempty(behData.(fname).Trial)
-        beh = rmfield(beh, fname);
-        continue;
-    end
-    loc = behData.(fname);
-    loc.RTn = loc.Reaction_Time(loc.trial_type==0); %neutral
-    loc.RTn_mean = mean(loc.RTn);
-    loc.RTn_std = std(loc.RTn);
-    loc.RTc = loc.Reaction_Time(loc.trial_type==1); %congruent
-    loc.RTc_mean = mean(loc.RTc);
-    loc.RTc_std = std(loc.RTc);
-    loc.RTi = loc.Reaction_Time(loc.trial_type==2); %incongruent
-    loc.RTi_mean = mean(loc.RTi);
-    loc.RTi_std = std(loc.RTi);
-    
+
+    if contains(fname,'stroop')
+        
+        loc = behData.(fname);
+        rowsToKeep = ~isnan(loc.Reaction_Time);
+        fieldsStroop = fieldnames(loc);
+        for k = 1:numel(fieldsStroop)
+            fieldStroop = fieldsStroop{k}
+            loc.(fieldStroop) = loc.(fieldStroop)(rowsToKeep);
+        end
+        loc.RTn = loc.Reaction_Time(loc.trial_type==0); %neutral
+        loc.RTn_mean = mean(loc.RTn);
+        loc.RTn_std = std(loc.RTn);
+        loc.RTc = loc.Reaction_Time(loc.trial_type==1); %congruent
+        loc.RTc_mean = mean(loc.RTc);
+        loc.RTc_std = std(loc.RTc);
+        loc.RTi = loc.Reaction_Time(loc.trial_type==2); %incongruent
+        loc.RTi_mean = mean(loc.RTi);
+        loc.RTi_std = std(loc.RTi);
+    else
+        loc = behData.(fname);
+        loc.RTd = loc.RT(loc.trial_type==1);
+        loc.RTd_mean = mean(loc.RTd);
+        loc.RTd_std = std(loc.RTd);
+        
+        loc.RTd_correct = loc.RT(loc.trial_type==1 & loc.response == 1);
+        loc.RTd_mean_corr = mean(loc.RTd_correct);
+        loc.RTd_std_corr = std(loc.RTd_correct);
+        
+        loc.RTnd = loc.RT(loc.trial_type==0);
+        loc.RTnd_mean = mean(loc.RTnd);
+        loc.RTnd_std = std(loc.RTnd);
+        
+        loc.RTnd_correct = loc.RT(loc.trial_type==0 & loc.response == 1);
+        loc.RTnd_mean_corr = mean(loc.RTnd_correct);
+        loc.RTnd_std_corr = std(loc.RTnd_correct);
+    end 
     behData.(fname) = loc;
 
 end
-
-
+%%
 behfields = fieldnames(behData);
 for i = 1:numel(behfields)
     fname = behfields{i};
-    plotStroopBeh(behData.(fname),[subjectID ' ' fname],figpath);
+    if contains(fname,'stroop')
+        plotStroopBeh(behData.(fname),[subjectID ' ' fname],figpath);
+    elseif contains(fname,'decoding')
+    else
+        plotBehavior(behData.(fname),cfg,[subjectID ' ' fname],figpath);
+    end
 end
 
 
@@ -202,8 +190,14 @@ end
 
 for i = 1:numel(fields)
     fname = fields{i};
-    data.(subjectID).(fname) = computeGrandAvg(data.(fname).epochs.data, ...
-        data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
+    if contains(fname,'stroop')
+
+    elseif contains(fname,'eogcalibration')
+
+    else
+        data.(subjectID).(fname) = computeGrandAvg(data.(fname).epochs.data, ...
+            data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
+    end 
 end
 
 %%%%%%%%%%%%%%%

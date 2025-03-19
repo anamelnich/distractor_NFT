@@ -65,7 +65,7 @@ function params = setParams(header)
     params.spatialFilter.type = 'None';  % Option : CAR, Laplace, xDAWN, CCA, CSD, None
     params.spatialFilter.time = round(0.15*params.fsamp)+1:round(0.5*params.fsamp);
     params.spatialFilter.time = params.spatialFilter.time + params.epochOnset;
-    params.spatialFilter.nComp = 2;
+    params.spatialFilter.nComp = 3;
     params.spatialFilter.classes = [1, 2];
 
     %%%%%%%%%%%%%%
