@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e14'
+subjectID='e13'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -74,14 +74,15 @@ end
 %%%%%%%%%%%%%%%%%%%%
 
 % epochsForTrain = {data.training1.epochs};
-epochsForTrain = {data.training1.epochs,data.decoding1.epochs};
+% epochsForTrain = {data.training1.epochs,data.decoding1.epochs};
 % epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
 % epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs,data.decoding2.epochs};
-
+% epochsForTrain = {data.training1.epochs, data.training2.epochs, data.training3.epochs, data.decoding1.epochs,data.decoding2.epochs};
+epochsForTrain = {data.training1.epochs, data.training2.epochs, data.training3.epochs, data.decoding1.epochs,data.decoding2.epochs,data.decoding3.epochs};
 trainingData = combineEpochs(epochsForTrain);
 cfg.features.diffwave_iscompute = true;
 cfg.spatialFilter.nComp = 2;
-cfg.classify.reduction.type = 'r2';
+cfg.classify.reduction.type = 'lasso';
 n_files = length(trainingData.eof);
 trainingData.posteriors = nan(length(trainingData.labels), 1);
 trainingData.posteriorstrain = nan(length(trainingData.labels), 1);
@@ -155,9 +156,9 @@ title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-% ylim([0 150]);
+ylim([0 250]);
 % ylim([0 90]);
-ylim([0 50]);
+% ylim([0 50]);
 
 
 % Subplot 3: Label = 0
@@ -171,9 +172,9 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-% ylim([0 150]);
+ylim([0 250]);
 % ylim([0 90]);
-ylim([0 50]);
+% ylim([0 50]);
 
 % Visualize CCA
 Electrodes = {'P1/2', 'P3/4', 'P5/6', 'P7/8', 'PO3/4', 'PO5/6', 'PO7/8'};
