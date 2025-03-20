@@ -1,4 +1,5 @@
 function [decoder, classifierEpochs] = computeDecoderNew(trainEpochs, trainLabels, params)
+% computeDecoderNew(trainingData.data, trainingData.labels, cfg);
 %%
 % rng(1)
 
@@ -103,7 +104,7 @@ trainLabels(trainLabels == 2) = 1;
 
 % Process ERP features if requested.
 if params.features.erp_iscompute
-    [ERP_classEpochs, ERPfilterMatrix] = processFeatures(selectedEpochsERP, trainLabels, params);
+    [ERP_classEpochs, ERPfilterMatrix] = processFeatures(selectedEpochsERP, trainLabels, params); % 46x240
 else
     ERP_classEpochs = [];
     ERPfilterMatrix = 'na';
@@ -111,7 +112,7 @@ end
 
 % Process difference-wave features if requested.
 if params.features.diffwave_iscompute
-    [diff_classEpochs, diffFilterMatrix] = processFeatures(selectedEpochsDiff, trainLabels, params);
+    [diff_classEpochs, diffFilterMatrix] = processFeatures(selectedEpochsDiff, trainLabels, params);%46x240
 else
     diff_classEpochs = [];
     diffFilterMatrix = 'na';
@@ -119,7 +120,7 @@ end
 
 % Concatenate along feature dimension.
 if params.features.erp_iscompute && params.features.diffwave_iscompute
-    classifierEpochs = [ERP_classEpochs; diff_classEpochs];
+    classifierEpochs = [ERP_classEpochs; diff_classEpochs]; %92x240
 elseif params.features.erp_iscompute
     classifierEpochs = ERP_classEpochs;
 elseif params.features.diffwave_iscompute
@@ -144,22 +145,40 @@ if (params.classify.is_normalize)
     classifierEpochs = funNormalize(classifierEpochs);
 end
 
+
+
 if isequal(params.classify.reduction.type, 'lasso')
     lambdaMax = 0.1;
     Lambda = logspace(log10(0.001*lambdaMax), log10(lambdaMax), 100);
     cvmodel = fitrlinear(classifierEpochs, trainLabels, 'ObservationsIn', 'columns', 'Lambda', Lambda, 'KFold', 5, 'Learner', 'leastsquares', 'Solver', 'sparsa', 'Regularization', 'lasso');
     mse = kfoldLoss(cvmodel);
     [~, idx] = min(mse);
+    selectedLambda = Lambda(idx);
     model = fitrlinear(classifierEpochs, trainLabels, 'ObservationsIn', 'columns', 'Lambda', Lambda(idx), 'Learner', 'leastsquares', 'Solver', 'sparsa', 'Regularization', 'lasso');
     keepIdx = model.Beta ~= 0;
     classifierEpochs = classifierEpochs(keepIdx, :);
+    disp(['Number of features selected: ', num2str(sum(keepIdx))]);
 elseif isequal(params.classify.reduction.type, 'r2')
-    power = compute_r2(permute(classifierEpochs, [1 3 2]), trainLabels);
+    power = compute_r2(permute(classifierEpochs, [1 3 2]), trainLabels); %after permute, 92x1x240, trainLabels 240x1
     [~, keepIdx] = sort(power, 'descend');
+    keepIdx = keepIdx(1:30);
     classifierEpochs = classifierEpochs(keepIdx, :);
+    
+    figure;
+    bar(1:length(power), power);
+    hold on;
+    bar(keepIdx, power(keepIdx));
+    xlabel('Feature Index');
+    ylabel('r^2');
+    ylim([0 0.15]);
+    title('Feature-wise r^2 (with selected features highlighted)');
+    hold off;
 end
 
 %% Classification %%
+% disp(['Size of classifierEpochs: ', mat2str(size(classifierEpochs))]);
+% disp(['Size of trainLabels: ', mat2str(size(trainLabels))]);
+
 model = fitcdiscr(classifierEpochs', trainLabels, 'Prior', 'uniform', 'DiscrimType', params.classify.type);
 decoder.Classes = model.ClassNames;
 w = model.Coeffs(2,1).Linear;
@@ -201,6 +220,10 @@ decoder.leftElectrodeIndices = leftElectrodeIndices;
 decoder.rightElectrodeIndices = rightElectrodeIndices;
 decoder.features.erp_iscompute = params.features.erp_iscompute;
 decoder.features.diffwave_iscompute = params.features.diffwave_iscompute;
+decoder.baseline_indices = baseline_indices;
+if isequal(params.classify.reduction.type, 'lasso')
+    decoder.lassoLambda = selectedLambda;
+end 
 
 end
 

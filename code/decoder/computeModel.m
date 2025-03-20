@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e13'
+subjectID='e14'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -72,11 +72,16 @@ end
 %%%%%%%%%%%%%%%%%%%%
 %% Classification %%
 %%%%%%%%%%%%%%%%%%%%
-epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
+
+% epochsForTrain = {data.training1.epochs};
+epochsForTrain = {data.training1.epochs,data.decoding1.epochs};
+% epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
+% epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs,data.decoding2.epochs};
+
 trainingData = combineEpochs(epochsForTrain);
 cfg.features.diffwave_iscompute = true;
 cfg.spatialFilter.nComp = 2;
-cfg.classify.reduction.type = 'lasso';
+cfg.classify.reduction.type = 'r2';
 n_files = length(trainingData.eof);
 trainingData.posteriors = nan(length(trainingData.labels), 1);
 trainingData.posteriorstrain = nan(length(trainingData.labels), 1);
@@ -93,8 +98,8 @@ end
 trainingData.newlabels = trainingData.labels;
 trainingData.newlabels(trainingData.labels == 2) = 1;
 disp('== Synchronous Classification == ');
-[x, y, t, auc, opt] = perfcurve(~trainingData.newlabels,1-trainingData.posteriors, 1, 'Prior', 'uniform');
-% [x, y, t, auc, opt] = perfcurve(trainingData.newlabels,trainingData.posteriors, 1, 'Prior', 'uniform');
+% [x, y, t, auc, opt] = perfcurve(~trainingData.newlabels,1-trainingData.posteriors, 1, 'Prior', 'uniform');
+[x, y, t, auc, opt] = perfcurve(trainingData.newlabels,trainingData.posteriors, 1, 'Prior', 'uniform');
 % threshold = 0.42;
 threshold = t(x == opt(1) & y == opt(2));
 disp(['AUC score : ' num2str(auc, '%.2f') ' Threshold: ' num2str(threshold, '%.2f')]);
@@ -150,7 +155,9 @@ title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 90]);
+% ylim([0 150]);
+% ylim([0 90]);
+ylim([0 50]);
 
 
 % Subplot 3: Label = 0
@@ -164,7 +171,30 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 90]);
+% ylim([0 150]);
+% ylim([0 90]);
+ylim([0 50]);
+
+% Visualize CCA
+Electrodes = {'P1/2', 'P3/4', 'P5/6', 'P7/8', 'PO3/4', 'PO5/6', 'PO7/8'};
+figure;
+subplot(1,2,1);
+imagesc(decoder.spatialFilter.erp); % Displays a heatmap
+colorbar;
+title('ERP Spatial Filter Weights');
+xlabel('Component');
+set(gca, 'XTick', 1:2, 'XTickLabel', {'Comp 1', 'Comp 2'});
+ylabel('Left Electrodes');
+set(gca, 'YTick', 1:7, 'YTickLabel', Electrodes);
+
+subplot(1,2,2);
+imagesc(decoder.spatialFilter.diff);
+colorbar;
+title('Diff Spatial Filter Weights');
+xlabel('Component');
+set(gca, 'XTick', 1:2, 'XTickLabel', {'Comp 1', 'Comp 2'});
+ylabel('Right Electrodes');
+set(gca, 'YTick', 1:7, 'YTickLabel', Electrodes);
 
 
 %%
@@ -176,6 +206,15 @@ else
     disp('Preprocessing is NOT the same.');
 end
 cm = confusionmat(logical(trainingData.newlabels), (trainingData.posteriors >= threshold));
+disp('Confusion Matrix (with labels):')
+disp('--------------------------------')
+disp('            Pred=0    Pred=1')
+fprintf('True=0:       %3d       %3d\n', cm(1,1), cm(1,2));
+fprintf('True=1:       %3d       %3d\n', cm(2,1), cm(2,2));
+tnr = cm(1,1) / sum(cm(1, :));
+tpr = cm(2,2) / sum(cm(2, :));
+accuracy = (cm(1,1) + cm(2,2)) / sum(cm(:));
+disp(['TNR: ' num2str(tnr, '%.2f') ' TPR: ' num2str(tpr, '%.2f') ' Accuracy: ' num2str(accuracy, '%.2f')]);
 %%
 decoder.decision_threshold = threshold;
 decoder.eegChannels = cfg.eegChannels; 
