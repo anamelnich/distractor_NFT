@@ -65,14 +65,14 @@ function params = setParams(header)
     params.spatialFilter.type = 'None';  % Option : CAR, Laplace, xDAWN, CCA, CSD, None
     params.spatialFilter.time = round(0.15*params.fsamp)+1:round(0.5*params.fsamp);
     params.spatialFilter.time = params.spatialFilter.time + params.epochOnset;
-    params.spatialFilter.nComp = 3;
+    params.spatialFilter.nComp = 2;
     params.spatialFilter.classes = [1, 2];
 
     %%%%%%%%%%%%%%
     %% Features %%
     %%%%%%%%%%%%%%
     params.features.erp_iscompute = true;
-    params.features.diffwave_iscompute = true;
+    params.features.diffwave_iscompute = false;
 
     %%%%%%%%%%%%%%%%%%%%%%
     %% Resampling Ratio %%
@@ -109,7 +109,7 @@ function params = setParams(header)
     %% Classifier %%
     %%%%%%%%%%%%%%%%
     params.classify.is_normalize = true;
-    params.classify.reduction.type = 'lasso'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
+    params.classify.reduction.type = 'None'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
     params.classify.type = 'linear'; % {'SVM', 'LinearSVM', 'LDA', 'diagLDA', 'diagQuadratic', 'SLR_VAR', 'L1_SLR'}
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

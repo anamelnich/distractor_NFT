@@ -71,7 +71,7 @@ for i_trial = 1:n_trials
         electrodeIndicesERP = rightElectrodeIndices;
     elseif label == 0
         if rand < 0.5
-        % if ismember(i_trial, idxLeft0)
+%         if ismember(i_trial, idxLeft0)
             electrodeIndicesERP = leftElectrodeIndices;
         else
             electrodeIndicesERP = rightElectrodeIndices;
@@ -89,7 +89,7 @@ for i_trial = 1:n_trials
         diff_trial = trainEpochs(:, rightElectrodeIndices, i_trial) - trainEpochs(:, leftElectrodeIndices, i_trial);
     elseif label == 0
         if rand < 0.5
-        % if ismember(i_trial, idxLeft0)
+%         if ismember(i_trial, idxLeft0)
             diff_trial = trainEpochs(:, leftElectrodeIndices, i_trial) - trainEpochs(:, rightElectrodeIndices, i_trial);
         else
             diff_trial = trainEpochs(:, rightElectrodeIndices, i_trial) - trainEpochs(:, leftElectrodeIndices, i_trial);

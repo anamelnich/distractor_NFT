@@ -178,7 +178,8 @@ else
     triggerData = readmatrix(triggersFile);
     % Remove rows with unwanted trigger values (e.g., 6)
     triggerData(triggerData(:,2) == 6, :) = [];
-
+    dupIdx = find(diff(triggerData(:,3)) == 1) + 1;
+    triggerData(dupIdx, :) = [];
     
     % Define field names for standard behavioral variables.
     beh_vars = {'trial', 'trial_type', 'response', 'tpos', 'dpos', 'dot'};
@@ -194,7 +195,7 @@ else
         responses = triggerData(2:3:end, :);   % responses in even rows
     else
         trialStarts = triggerData(triggerData(:,2)>50, :); % assume trial start events are in odd rows
-        responses = triggerData(2:2:end, :);   % responses in even rows
+        responses = triggerData(triggerData(:,2)<50, :);   % responses in even rows
     end 
     RT = responses(:,3) - trialStarts(:,3);
     behSession.RT = RT;

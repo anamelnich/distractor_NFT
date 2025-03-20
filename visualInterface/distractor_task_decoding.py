@@ -145,15 +145,21 @@ n_d_trials = n_trials/2
 
 
 ########################define shape sizes and location based on eccentricity + other graphic elements########################
-# screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
-# screen_width_px, screen_height_px = screen.get_size()
+screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+screen_width_px, screen_height_px = screen.get_size()
 # Replace the FULLSCREEN mode with RESIZABLE mode
-screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
-pygame.display.set_caption("D Task")
-screen_width_px, screen_height_px = 1920, 1080
+# screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
+# pygame.display.set_caption("D Task")
+# screen_width_px, screen_height_px = 1920, 1080
 
-thumb_up = pygame.image.load("./img/thumb_up.png").convert_alpha()
-thumb_down = pygame.image.load("./img/thumb_down.png").convert_alpha()
+# thumb_up = pygame.image.load("./img/thumb_up.png").convert_alpha()
+# thumb_down = pygame.image.load("./img/thumb_down.png").convert_alpha()
+icon_size = (150, 150) 
+
+thumb_up = pygame.transform.scale(
+    pygame.image.load("./img/thumb_up.png").convert_alpha(), icon_size)
+thumb_down = pygame.transform.scale(
+    pygame.image.load("./img/thumb_down.png").convert_alpha(), icon_size)
 screen_width_cm = 30.5  # in cm
 screen_height_cm = 18.0 
 viewing_distance_cm = 60.0

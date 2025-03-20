@@ -72,9 +72,11 @@ end
 %%%%%%%%%%%%%%%%%%%%
 %% Classification %%
 %%%%%%%%%%%%%%%%%%%%
-epochsForTrain = {data.training1.epochs};
+epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
 trainingData = combineEpochs(epochsForTrain);
-
+cfg.features.diffwave_iscompute = true;
+cfg.spatialFilter.nComp = 2;
+cfg.classify.reduction.type = 'lasso';
 n_files = length(trainingData.eof);
 trainingData.posteriors = nan(length(trainingData.labels), 1);
 trainingData.posteriorstrain = nan(length(trainingData.labels), 1);
@@ -148,7 +150,7 @@ title('Label = 0');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 50]);
+ylim([0 90]);
 
 
 % Subplot 3: Label = 0
@@ -162,7 +164,7 @@ title('Label = 1');
 xlabel('Posterior Probability');
 ylabel('Count');
 xlim([0 1]);
-ylim([0 50]);
+ylim([0 90]);
 
 
 %%

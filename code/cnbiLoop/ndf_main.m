@@ -56,6 +56,9 @@ try
     
                     [ex_posterior, ~, NDside] = singleClassificationNew(decoder, stream.eeg((first_index - round(0.2*decoder.fsamp)):end, decoder.eegChannels), label_value, 1,decoder.leftElectrodeIndices,decoder.rightElectrodeIndices); %data from first index to end of buffer
                     %stream.eeg is 768 x 68, first_index = 154, label_value
+                    %first index 152 - 0.2*fsamp which is 102 --> eeg
+                    %starts at sample 50, so first index in eeg should be
+                    %152-50 = 102
                     %110
                     % eeg will rougly be 728x64
                     disp(['Time Frame: ' num2str(time_frame, '%.2f') ' Posteriors: ' num2str(ex_posterior, ' %.2f')]);
@@ -71,7 +74,7 @@ try
             end
         end
     end
-folderPath = './../online_decoders';
+folderPath = './online_decoders';
 timestamp = datestr(now, 'yyyymmdd_HHMMSS');
 filename = fullfile(folderPath,['decoder_' timestamp '.mat']);
 save(filename, 'decoder');

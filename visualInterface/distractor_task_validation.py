@@ -233,7 +233,7 @@ while run:
     if trial_index < n_trials:
         if trial_index == 0:
             screen.fill((0, 0, 0))
-            text = font.render(f'press any key to start', False, (225, 225, 225))
+            text = font.render(f'Press any key to start', False, (225, 225, 225))
             textRect = text.get_rect()
             textRect.center = (x_center, y_center)
             screen.blit(text, textRect)
@@ -245,6 +245,28 @@ while run:
                     if event.type == pygame.KEYDOWN:
                         waiting_for_key = False
                         print("Key pressed. Starting trials...")
+        if trial_index == 31:
+            screen.fill((0, 0, 0))
+            break_text = font.render("Time for a break!", True, (225, 225, 225))
+            break_text_rect = break_text.get_rect(center=(x_center, y_center))
+            screen.blit(break_text, break_text_rect)
+            pygame.display.update()
+
+            pygame.time.delay(20000)  
+
+            # Display "Press any key to start" screen
+            screen.fill((0, 0, 0))
+            start_text = font.render("Press any key to start", True, (225, 225, 225))
+            start_text_rect = start_text.get_rect(center=(x_center, y_center))
+            screen.blit(start_text, start_text_rect)
+            pygame.display.update()
+
+            # Wait for key press to resume trials
+            waiting_for_key = True
+            while waiting_for_key:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        waiting_for_key = False
         #Draw blank screen
         trial_start = pygame.time.get_ticks()
         screen.fill((0, 0, 0))
@@ -278,7 +300,7 @@ while run:
         while not trial_end:
 
             # Check if 2000ms have passed
-            if pygame.time.get_ticks() - array_start_time >= 2000:
+            if pygame.time.get_ticks() - array_start_time >= 2500:
                 trial_end = True
                 response = 3
                 add_trigger(13)

@@ -28,8 +28,8 @@ function [posterior, epoch, NDside] = singleClassificationNew(decoder, eeg, labe
 %   posterior     - posterior probability computed by the classifier.
 %   epoch         - final feature vector(s) used by the classifier.
 
-% rng(4)  % Ensure reproducible random choices
-
+% rng(1)  % Ensure reproducible random choices, CANNOT HAVE THIS IF USING
+% rand<0.5
 %% (Optional) Remove unwanted channels for type==1 or type==2
 if type == 1 || type == 2
     eeg(:, decoder.chantoremove) = [];
@@ -42,9 +42,9 @@ if type == 0
     eeg = eeg - baseline;
     first_index = 0; %placeholder
 elseif type == 1
-    first_index = round(0.2 * decoder.fsamp);
-    baseline_period = [1, first_index];
-    baseline = mean(eeg(baseline_period, :, :), 1);
+    first_index = round(0.2 * decoder.fsamp); %102
+    baseline_period = 1:first_index;
+    baseline = mean(eeg(baseline_period, :, :), 1); %baseline eeg is 102x58, after mean 1x58 (avg baseline for each electrode) 
     eeg = eeg - baseline;
 elseif type == 2
     % No baseline correction applied.
@@ -79,7 +79,7 @@ if type == 0
             diff_trial = eeg(:, rightElectrodes, i_trial) - eeg(:, leftElectrodes, i_trial);
         elseif lab == 0
             if rand < 0.5
-            % if ismember(i_trial, idxLeft0)
+%             if ismember(i_trial, idxLeft0)
                 electrodeIndicesERP = leftElectrodes;
                 diff_trial = eeg(:, leftElectrodes, i_trial) - eeg(:, rightElectrodes, i_trial);
             else
@@ -132,6 +132,7 @@ end
 % This function applies spatial filtering (e.g., using CCA), resampling, PSD/riemann, etc.
 if decoder.features.erp_iscompute
     ERP_features = processFeatures(selectedEpochsERP, decoder, decoder.spatialFilter.erp,type,first_index);
+    %ouput is 46x1
 else
     ERP_features = [];
 end
@@ -169,10 +170,11 @@ end
 
 %% Helper Function: processFeatures
 function features = processFeatures(eeg, decoder, filterMatrix,type, first_index)
+%ERP_features = processFeatures(selectedEpochsERP, decoder, decoder.spatialFilter.erp,type,first_index);
 % Spatial Filter
-n_trials = size(eeg, 3);
+n_trials = size(eeg, 3); %1 for type 1
 % Allocate a new variable for the spatially filtered EEG
-sf_eeg = nan(size(eeg,1), size(filterMatrix,2), n_trials);
+sf_eeg = nan(size(eeg,1), size(filterMatrix,2), n_trials); % 719x2
 for i_trial = 1:n_trials
     % Multiply the trial's data [n_samples x n_channels] by filterMatrix [n_channels x nComp]
     sf_eeg(:,:,i_trial) = eeg(:,:,i_trial) * filterMatrix;
@@ -184,9 +186,12 @@ if (decoder.resample.is_compute)
         resamp = sf_eeg(decoder.resample.time(1:decoder.resample.ratio:end), :, :); %334 to 512 or ~0.65-0.5 = 0.15 to 1-0.5=0.5
         resamps = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
     elseif type == 1
-        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.5*decoder.fsamp)); %78 through 358
-        resamp = sf_eeg(time(1:decoder.resample.ratio:end), :, :); 
-        resamps = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]);
+        time = first_index + (round(0.15*decoder.fsamp)+1:round(0.5*decoder.fsamp)); % first index 102 + ((76.8-->77)+ 1 = 78 until 256 
+        % 102 + 1x179 matrix starting from 78 until 256, so roughly from 152.34
+        % msec until 500 msec; after adding first_index, 351.56 until
+        % 699.22 msec
+        resamp = sf_eeg(time(1:decoder.resample.ratio:end), :, :); %time becomes 1x23, resamp is 23 timepoints x2 components
+        resamps = reshape(resamp, [size(resamp,1)*size(resamp,2) n_trials]); % [23*2 1], output is 46 x1 
     end
 else
     resamps = [];
@@ -214,8 +219,8 @@ end
 features = [];
 startSample = 1;
 if ~isempty(resamps)
-    features = cat(1, features, resamps);
-    params.resample.range = startSample:size(features,1);
+    features = cat(1, features, resamps); %same as resamps
+    params.resample.range = startSample:size(features,1); % 1 through 46
     startSample = params.resample.range(end) + 1;
 end
 if ~isempty(psds)
