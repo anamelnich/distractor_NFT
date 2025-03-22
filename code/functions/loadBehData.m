@@ -91,11 +91,28 @@ for t = 1:length(taskTypes)
     dayFields = sort(dayFields); % sorted by day, e.g., 'd20240316', 'd20240317',...
     for i = 1:length(dayFields)
         sessions = tasks.(taskType).(dayFields{i});
+        % For each session in this day, assign runNumber (if not already set)
+        for k = 1:length(sessions)
+            % Check if runNumber is empty. It is expected that each session
+            % has a field that holds trials, for example 'trial'.
+            if ~isfield(sessions{k}, 'runNumber') || isempty(sessions{k}.runNumber)
+                % Determine the number of trials in this session (assume field 'trial' exists)
+                if isfield(sessions{k}, 'trial')
+                    nTrials = length(sessions{k}.trial);
+                elseif isfield(sessions{k}, 'Trial')
+                    nTrials = length(sessions{k}.Trial);
+                end
+                % Create a vector with the run number for each trial.
+                sessions{k}.runNumber = repmat(k, nTrials, 1);
+            end
+        end
+        
+        % Now concatenate the sessions for that day.
         combined = sessions{1};
         for j = 2:length(sessions)
             combined = concatenateBehSession(combined, sessions{j});
         end
-        % Create field name such as 'training1', 'decoding1', 'stroop1', etc.
+        % Create a field name for the combined session, e.g., 'training1', 'decoding1', etc.
         fieldName = [taskType num2str(i)];
         behData.(fieldName) = combined;
     end
@@ -182,7 +199,11 @@ else
     triggerData(dupIdx, :) = [];
     
     % Define field names for standard behavioral variables.
-    beh_vars = {'trial', 'trial_type', 'response', 'tpos', 'dpos', 'dot'};
+    if strcmp(taskType, 'decoding')  
+        beh_vars = {'trial', 'trial_type', 'response', 'tpos', 'dpos', 'dot','class'};
+    else
+        beh_vars = {'trial', 'trial_type', 'response', 'tpos', 'dpos', 'dot'};
+    end
     behSession = struct();
     for i = 1:length(beh_vars)
         behSession.(beh_vars{i}) = beh(:, i);

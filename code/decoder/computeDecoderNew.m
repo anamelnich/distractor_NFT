@@ -160,8 +160,16 @@ if isequal(params.classify.reduction.type, 'lasso')
     disp(['Number of features selected: ', num2str(sum(keepIdx))]);
 elseif isequal(params.classify.reduction.type, 'r2')
     power = compute_r2(permute(classifierEpochs, [1 3 2]), trainLabels); %after permute, 92x1x240, trainLabels 240x1
-    [~, keepIdx] = sort(power, 'descend');
-    keepIdx = keepIdx(1:30);
+    % [~, keepIdx] = sort(power, 'descend');
+    % keepIdx = keepIdx(1:30);
+
+    maxPower = max(power);
+    disp(maxPower)
+    threshold = 0.25 * maxPower;
+    disp(threshold)
+    keepIdx = find(power >= threshold);
+    disp(length(keepIdx))
+
     classifierEpochs = classifierEpochs(keepIdx, :);
     
     figure;
@@ -170,9 +178,18 @@ elseif isequal(params.classify.reduction.type, 'r2')
     bar(keepIdx, power(keepIdx));
     xlabel('Feature Index');
     ylabel('r^2');
-    ylim([0 0.15]);
+    ylim([0 0.1]);
     title('Feature-wise r^2 (with selected features highlighted)');
     hold off;
+    figpath = '../../Figures/';
+    baseName = 'Featurewise_r2.png';
+    fullName = fullfile(figpath, baseName);
+    counter = 1;
+    while exist(fullName, 'file')
+        fullName = fullfile(figpath, sprintf('Featurewise_r2_%d.png', counter));
+        counter = counter + 1;
+    end
+    saveas(gcf, fullName);
 end
 
 %% Classification %%

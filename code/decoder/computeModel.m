@@ -1,11 +1,12 @@
 %function computeModel(subjectID)
-subjectID='e14'
+subjectID='e13'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
 clearvars -except subjectID  sessions plot_flag;
 close all; clc; rng('default');
 addpath(genpath('../functions'));
+figpath = '../../Figures/';
 %%%%%%%%%%%%%%%%%%
 %% Load dataset %%
 %%%%%%%%%%%%%%%%%%
@@ -73,10 +74,16 @@ end
 %% Classification %%
 %%%%%%%%%%%%%%%%%%%%
 
-% epochsForTrain = {data.training1.epochs};
-epochsForTrain = {data.training1.epochs,data.decoding1.epochs};
-% epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
-% epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs,data.decoding2.epochs};
+%session 1 model
+epochsForTrain = {data.training1.epochs};
+
+%session 2 model
+% epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
+% data.decoding1.epochs};   
+
+%session 3 model
+% epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
+% data.training3.epochs, data.decoding1.epochs,data.decoding2.epochs};
 
 trainingData = combineEpochs(epochsForTrain);
 cfg.features.diffwave_iscompute = true;
@@ -100,8 +107,8 @@ trainingData.newlabels(trainingData.labels == 2) = 1;
 disp('== Synchronous Classification == ');
 % [x, y, t, auc, opt] = perfcurve(~trainingData.newlabels,1-trainingData.posteriors, 1, 'Prior', 'uniform');
 [x, y, t, auc, opt] = perfcurve(trainingData.newlabels,trainingData.posteriors, 1, 'Prior', 'uniform');
-% threshold = 0.42;
-threshold = t(x == opt(1) & y == opt(2));
+threshold = 0.4961;
+% threshold = t(x == opt(1) & y == opt(2));
 disp(['AUC score : ' num2str(auc, '%.2f') ' Threshold: ' num2str(threshold, '%.2f')]);
 disp('Confusion Matrix: ');
 cmCV = confusionmat(logical(trainingData.newlabels), (trainingData.posteriors >= threshold));
@@ -114,6 +121,8 @@ tnr = cmCV(1,1) / sum(cmCV(1, :));
 tpr = cmCV(2,2) / sum(cmCV(2, :));
 accuracy = (cmCV(1,1) + cmCV(2,2)) / sum(cmCV(:));
 disp(['TNR: ' num2str(tnr, '%.2f') ' TPR: ' num2str(tpr, '%.2f') ' Accuracy: ' num2str(accuracy, '%.2f')]);
+
+
 %%
 figure;
 
@@ -175,7 +184,7 @@ xlim([0 1]);
 % ylim([0 90]);
 ylim([0 50]);
 
-% Visualize CCA
+%% Visualize CCA
 Electrodes = {'P1/2', 'P3/4', 'P5/6', 'P7/8', 'PO3/4', 'PO5/6', 'PO7/8'};
 figure;
 subplot(1,2,1);
@@ -215,6 +224,77 @@ tnr = cm(1,1) / sum(cm(1, :));
 tpr = cm(2,2) / sum(cm(2, :));
 accuracy = (cm(1,1) + cm(2,2)) / sum(cm(:));
 disp(['TNR: ' num2str(tnr, '%.2f') ' TPR: ' num2str(tpr, '%.2f') ' Accuracy: ' num2str(accuracy, '%.2f')]);
+
+%% Offline posteriors 
+%% Set Parameters
+session = 3;         % Choose session: 1, 2, or 3
+
+switch session
+    case 1
+        epochsForTrain = {data.training1.epochs};
+        testingData = data.decoding1.epochs;
+    case 2
+        epochsForTrain = {data.training1.epochs, data.training2.epochs, data.decoding1.epochs};
+        testingData = data.decoding2.epochs;
+    case 3
+        epochsForTrain = {data.training1.epochs, data.training2.epochs, data.training3.epochs, ...
+                           data.decoding1.epochs, data.decoding2.epochs};
+        testingData = data.decoding3.epochs;
+    otherwise
+        error('Session number must be 1, 2, or 3.');
+end
+
+trainingData = combineEpochs(epochsForTrain);
+
+[decoder, modeloutput] = computeDecoderNew(trainingData.data, trainingData.labels, cfg);
+
+%%
+[testingData.posteriors, classoutput] = singleClassificationNew(decoder, testingData.data, testingData.labels, 0, ...
+                                              decoder.leftElectrodeIndices, decoder.rightElectrodeIndices);
+
+
+testingData.newlabels = testingData.labels;
+testingData.newlabels(testingData.labels == 2) = 1;
+
+figure;
+
+% Define details for each subplot in a structure array:
+% For each subplot, specify the label, which field to use ('labels' or 'newlabels'),
+% and the desired y-axis limits.
+subplotInfo = { ...
+    struct('label', 1, 'dataField', 'labels',    'ylim', [0 0.3]), ...
+    struct('label', 2, 'dataField', 'labels',    'ylim', [0 0.3]), ...
+    struct('label', 0, 'dataField', 'labels',    'ylim', [0 0.3]), ...
+    struct('label', 1, 'dataField', 'newlabels', 'ylim', [0 0.5])};
+
+for i = 1:length(subplotInfo)
+    subplot(4,1,i);
+    cur = subplotInfo{i};
+    % Logical index for current label
+    idx = testingData.(cur.dataField) == cur.label;
+    histogram(testingData.posteriors(idx), ...
+        'Normalization', 'probability', ...
+        'FaceAlpha', 0.5, ...
+        'FaceColor', 'r', ...
+        'EdgeColor', 'none', ...
+        'NumBins', 10);
+    title(sprintf('Label = %d', cur.label));
+    xlabel('Posterior Probability');
+    ylabel('Count (normalized)');
+    xlim([0 1]);
+    ylim(cur.ylim);
+end
+
+% Add a descriptive overall title to the figure
+suptitle(sprintf('Subject %s - Session %d Posterior Probabilities', subjectID, session));
+
+%% Save the Figure
+saveFileName = sprintf('%s_session%d.png', subjectID, session);
+savePath = fullfile(figpath, saveFileName);
+saveas(gcf, savePath);
+
+
+
 %%
 decoder.decision_threshold = threshold;
 decoder.eegChannels = cfg.eegChannels; 

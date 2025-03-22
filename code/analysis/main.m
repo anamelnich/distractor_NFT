@@ -48,13 +48,23 @@ for i = 1:numel(behfields)
         loc.RTi = loc.Reaction_Time(loc.trial_type==2); %incongruent
         loc.RTi_mean = mean(loc.RTi);
         loc.RTi_std = std(loc.RTi);
+    elseif contains(fname, 'decoding')
+        loc = behData.(fname);
+        loc.classMetrics = calcClassMetrics(loc)
+        loc.RTd = loc.RT(loc.trial_type==1);
+        loc.RTd_mean = mean(loc.RTd);
+        loc.RTd_std = std(loc.RTd);
+        
+        loc.RTnd = loc.RT(loc.trial_type==0);
+        loc.RTnd_mean = mean(loc.RTnd);
+        loc.RTnd_std = std(loc.RTnd);
     else
         loc = behData.(fname);
         loc.RTd = loc.RT(loc.trial_type==1);
         loc.RTd_mean = mean(loc.RTd);
         loc.RTd_std = std(loc.RTd);
         
-        loc.RTd_correct = loc.RT(loc.trial_type==1 & loc.response == 1);
+        loc.RTd_correct = loc.RT(loc.trial_type==1 & (loc.response == 1 | loc.response == 3));
         loc.RTd_mean_corr = mean(loc.RTd_correct);
         loc.RTd_std_corr = std(loc.RTd_correct);
         
@@ -62,7 +72,7 @@ for i = 1:numel(behfields)
         loc.RTnd_mean = mean(loc.RTnd);
         loc.RTnd_std = std(loc.RTnd);
         
-        loc.RTnd_correct = loc.RT(loc.trial_type==0 & loc.response == 1);
+        loc.RTnd_correct = loc.RT(loc.trial_type==0 & (loc.response == 1 | loc.response == 3));
         loc.RTnd_mean_corr = mean(loc.RTnd_correct);
         loc.RTnd_std_corr = std(loc.RTnd_correct);
     end 
@@ -81,6 +91,7 @@ for i = 1:numel(behfields)
     end
 end
 
+visualizeClassMetrics(behData, cfg, figpath);
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Set data structure %%                   
@@ -199,6 +210,14 @@ for i = 1:numel(fields)
             data.(fname).epochs.labels,data.(fname).epochs.file_id,cfg,[subjectID ' ' fname]);
     end 
 end
+
+%% Before and after modulation ERP comparison
+
+sessions = {'training1','decoding1','training2','decoding2','training3','decoding3'}
+plotERPcomparison(data.e13, cfg, subjectID, path, sessions)
+
+sessions = {'validation1','validation2'}
+plotERPcomparison(data.e13, cfg, subjectID, path, sessions)
 
 %%%%%%%%%%%%%%%
 %% EOG plots %%
