@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e13'
+subjectID='e14'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -75,11 +75,11 @@ end
 %%%%%%%%%%%%%%%%%%%%
 
 %session 1 model
-epochsForTrain = {data.training1.epochs};
-
+% epochsForTrain = {data.training1.epochs};
+% epochsForTrain = {data.training1.epochs, data.decoding1.epochs};
 %session 2 model
-% epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
-% data.decoding1.epochs};   
+epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
+data.decoding1.epochs};   
 
 %session 3 model
 % epochsForTrain = {data.training1.epochs, data.training2.epochs, ...

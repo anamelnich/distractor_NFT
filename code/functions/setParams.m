@@ -73,7 +73,7 @@ function params = setParams(header)
     %% Features %%
     %%%%%%%%%%%%%%
     params.features.erp_iscompute = true;
-    params.features.diffwave_iscompute = false;
+    params.features.diffwave_iscompute = true;
 
     %%%%%%%%%%%%%%%%%%%%%%
     %% Resampling Ratio %%
@@ -110,7 +110,7 @@ function params = setParams(header)
     %% Classifier %%
     %%%%%%%%%%%%%%%%
     params.classify.is_normalize = true;
-    params.classify.reduction.type = 'None'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
+    params.classify.reduction.type = 'r2'; % {'pca', 'fisher', 'mRMR', 'lasso', 'lasso-rLDA', 'r2', 'None'}
     params.classify.type = 'linear'; % {'SVM', 'LinearSVM', 'LDA', 'diagLDA', 'diagQuadratic', 'SLR_VAR', 'L1_SLR'}
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
