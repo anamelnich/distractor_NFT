@@ -12,18 +12,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Artifact Rejection %%
 %%%%%%%%%%%%%%%%%%%%%%%%
-if (params.epochRejection.isCompute) 
-    badEpochs = artRej(trainEpochs, params);
-    
-    badEpochIndices = find(badEpochs);
-    nTrials = size(trainEpochs,3);
-    trainEpochs(:, :, badEpochIndices) = [];
-    trainLabels(badEpochIndices) = [];
-    fileID(badEpochIndices) = [];
-    
-    disp([num2str(sum(badEpochs)) ' / ' num2str(nTrials) ' trials are removed: ' num2str(100*sum(badEpochs)/nTrials) ' %']);
-
-end
+% if (params.epochRejection.isCompute) 
+%     badEpochs = artRej(trainEpochs, params);
+% 
+%     badEpochIndices = find(badEpochs);
+%     nTrials = size(trainEpochs,3);
+%     trainEpochs(:, :, badEpochIndices) = [];
+%     trainLabels(badEpochIndices) = [];
+%     fileID(badEpochIndices) = [];
+% 
+%     disp([num2str(sum(badEpochs)) ' / ' num2str(nTrials) ' trials are removed: ' num2str(100*sum(badEpochs)/nTrials) ' %']);
+% 
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Baseline correction %%%%%%%%%%%%%

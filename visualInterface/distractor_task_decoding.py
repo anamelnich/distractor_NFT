@@ -277,6 +277,7 @@ cmFP = 0
 cmFN = 0
 icon = None
 score=0
+resp_recorded = 0
 # Initialize running flag for the listener thread
 listener_running = [True]
 
@@ -346,8 +347,10 @@ while run:
             # Check if 2000ms have passed
             if pygame.time.get_ticks() - array_start_time >= 2000:
                 trial_end = True
-                response = 3
-                add_trigger(13)
+                if resp_recorded == 0:
+                    response = 3
+                    add_trigger(13)
+                resp_recorded = 0
             elif wait:
                 screen.fill((0, 0, 0))
                 pygame.display.update()
@@ -406,6 +409,7 @@ while run:
                         add_trigger(trigger_code)
                         screen.fill((0, 0, 0))
                         pygame.display.update()
+                        resp_recorded = 1
         
         # After the trial ends, clear the screen
         screen.fill((0, 0, 0))

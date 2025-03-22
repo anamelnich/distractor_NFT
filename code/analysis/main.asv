@@ -213,12 +213,11 @@ end
 
 %% Before and after modulation ERP comparison
 
-% sessions = {'training1','decoding1','training2','decoding2','training3','decoding3'}
-sessions = {'training1','decoding1','training2','decoding2'}
-plotERPcomparison(data.e14, cfg, subjectID, figpath, sessions)
-%%
+sessions = {'training1','decoding1','training2','decoding2','training3','decoding3'}
+plotERPcomparison(data.e13, cfg, subjectID, path, sessions)
+
 sessions = {'validation1','validation2'}
-plotERPcomparison(data.e13, cfg, subjectID, figpath, sessions)
+plotERPcomparison(data.e13, cfg, subjectID, path, sessions)
 
 %%%%%%%%%%%%%%%
 %% EOG plots %%

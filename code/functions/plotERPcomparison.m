@@ -56,7 +56,7 @@ function plotERPcomparison(processed_data, params, titleName, path, sessions)
         ylabel('Amplitude (\muV)');
         xline(0, '--k');
         yline(0, '--k');
-        ylim([-4 10]);
+        ylim([-6 10]);
         xlim([-0.1 0.6]);
         xticks(0:0.1:max(params.epochTime));
         legend(legendEntries, 'Location', 'best');
