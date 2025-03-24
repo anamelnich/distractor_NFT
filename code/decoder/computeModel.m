@@ -1,5 +1,5 @@
 %function computeModel(subjectID)
-subjectID='e14'
+subjectID='e13'
 %%%%%%%%%%%%%%%%%%%%
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
@@ -75,16 +75,16 @@ end
 %%%%%%%%%%%%%%%%%%%%
 
 %session 1 model
-% epochsForTrain = {data.training1.epochs};
+epochsForTrain = {data.training1.epochs};
 % epochsForTrain = {data.training1.epochs, data.decoding1.epochs};
 %session 2 model
-epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
-data.decoding1.epochs};   
+% epochsForTrain = {data.training1.epochs,data.training2.epochs,  ...
+% data.decoding1.epochs};   
 
 %session 3 model
 % epochsForTrain = {data.training1.epochs, data.training2.epochs, ...
-% data.training3.epochs, data.decoding1.epochs,data.decoding2.epochs};
-
+%  data.decoding1.epochs,data.decoding2.epochs};
+%%
 trainingData = combineEpochs(epochsForTrain);
 cfg.features.diffwave_iscompute = true;
 cfg.spatialFilter.nComp = 2;
@@ -296,12 +296,12 @@ saveas(gcf, savePath);
 
 
 %%
-decoder.decision_threshold = threshold;
+decoder.decision_threshold = 0.35;
 decoder.eegChannels = cfg.eegChannels; 
 decoder.eogChannels = cfg.eogChannels;
 %decoder.eogFilter = cfg.eogFilter;
 decoder.spectralFilter = cfg.spectralFilter;
-decoder.threshold = threshold;
+decoder.threshold = 0.35;
 decoder.chantoremove = chanIndices;
 
 decoder.resample.time = decoder.resample.time - decoder.epochOnset;

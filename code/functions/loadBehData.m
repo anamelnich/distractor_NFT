@@ -195,8 +195,8 @@ else
     triggerData = readmatrix(triggersFile);
     % Remove rows with unwanted trigger values (e.g., 6)
     triggerData(triggerData(:,2) == 6, :) = [];
-    dupIdx = find(diff(triggerData(:,3)) == 1) + 1;
-    triggerData(dupIdx, :) = [];
+%     dupIdx = find(diff(triggerData(:,3)) == 1) + 1;
+%     triggerData(dupIdx, :) = [];
 
     % dupIdx2 = find(diff(triggerData(:,2)) == 0) + 1;
     % triggerData(dupIdx2, :) = [];
@@ -216,8 +216,8 @@ else
     if strcmp(taskType, 'decoding')  
         trialStarts = triggerData(triggerData(:,2)>50, :);
         %trialStarts = triggerData(1:3:end, :); % assume trial start events are in odd rows
-        responses = triggerData(2:3:end, :);   % responses in even rows
-        % responses = triggerData(triggerData(:,2)<50, :);
+%         responses = triggerData(2:3:end, :);   % responses in even rows
+        responses = triggerData(triggerData(:,2)<50, :);
     else
         trialStarts = triggerData(triggerData(:,2)>50, :); % assume trial start events are in odd rows
         responses = triggerData(triggerData(:,2)<50, :);   % responses in even rows

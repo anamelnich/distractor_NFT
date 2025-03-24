@@ -160,15 +160,15 @@ if isequal(params.classify.reduction.type, 'lasso')
     disp(['Number of features selected: ', num2str(sum(keepIdx))]);
 elseif isequal(params.classify.reduction.type, 'r2')
     power = compute_r2(permute(classifierEpochs, [1 3 2]), trainLabels); %after permute, 92x1x240, trainLabels 240x1
-    % [~, keepIdx] = sort(power, 'descend');
-    % keepIdx = keepIdx(1:30);
+    [~, keepIdx] = sort(power, 'descend');
+    keepIdx = keepIdx(1:30);
 
-    maxPower = max(power);
-    disp(maxPower)
-    threshold = 0.25 * maxPower;
-    disp(threshold)
-    keepIdx = find(power >= threshold);
-    disp(length(keepIdx))
+%     maxPower = max(power);
+%     disp(maxPower)
+%     threshold = 0.25 * maxPower;
+%     disp(threshold)
+%     keepIdx = find(power >= threshold);
+%     disp(length(keepIdx))
 
     classifierEpochs = classifierEpochs(keepIdx, :);
     
